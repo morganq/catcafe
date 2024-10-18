@@ -1,0 +1,1 @@
+fswatch -o ./*.lua -o ./viewer_template.p8 -o catcafe_template.p8 -o sheet.json -o sheet.png | xargs -n1 -I{} ./build.sh
