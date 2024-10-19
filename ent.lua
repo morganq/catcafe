@@ -3,9 +3,8 @@ function make_ent(spri, x, y, depth_offset)
     if not meta then meta = SPRITE_META[spri[1]] end
     local e = {spri=spri, x=x + meta[3] \ 2, y=y + meta[4] \ 2, depth_offset=depth_offset or 0, meta=meta, hflip = false}
     e.dir = {0,1}
-    e.moveable = false
-    e.interactable = false
-    e.draw = function(self)
+    populate_table(e, "moveable=false,interactable=false,blocks_placement=true,collides=true,shaking=0,name=none")
+    e.draw = function(self, invalid, fakex, fakey)
         if self.pal then pal(self.pal) end
         local s = self.spri
         if type(self.spri) == "table" then
@@ -24,9 +23,15 @@ function make_ent(spri, x, y, depth_offset)
                     s = self.spri[2]
                 end
             end
-            printh(s)
         end
-        sprc(s, self.x, self.y, self.hflip)
+        local x = self.x
+        if self.shaking > 0 then
+            self.shaking -= 1
+            x = self.x + cos(time / 0x0.0004) * self.shaking / 8
+        end
+        x = fakex or x
+        local y = fakey or self.y
+        sprc(s, x, y, self.hflip)
         pal()
         --pset(self.x, self.y, 0)
         if false then
@@ -34,7 +39,7 @@ function make_ent(spri, x, y, depth_offset)
             rectfill(x1, y1, x2, y2, 12)
         end
         if selected_ent == self or (activity.name == "moving" and activity.ent == self) then
-            outline_sprc(7, self.spri, self.x + self.meta[5] * (self.hflip and -1 or 1), self.y + self.meta[6], self.hflip)
+            outline_sprc(invalid and 8 or 7, s, x + self.meta[5] * (self.hflip and -1 or 1), self.y + self.meta[6], self.hflip)
         end
     end
     e.update = function(self) end
@@ -48,6 +53,9 @@ function make_ent(spri, x, y, depth_offset)
     e.move = function(self, x, y)
         self.x, self.y = x, y
         self:calculate_rect()        
+    end
+    e.rotate = function(self)
+        self.dir = {self.dir[2], -self.dir[1]}
     end
     e.calculate_rect = function(self)
         local x1 = self.x + self.meta[7] - self.meta[5] - self.meta[3] / 2
@@ -69,6 +77,9 @@ function make_ent(spri, x, y, depth_offset)
     e.get_center = function(self)
         --return {self.x + self.meta[3] / 2 - self.meta[5], self.y + self.meta[4] / 2 - self.meta[6]}
         return {self.x, self.y}
+    end
+    e.shake = function(self)
+        self.shaking = 20
     end
     e:calculate_rect()
     add(ents, e)
@@ -93,33 +104,28 @@ function draw_ents()
     end
 end
 
-function make_floor_item(spri3, x, y)
+function make_blocker(x, y, w, h)
+    local e = make_ent(1, x, y, -127)
+    e.collides = false
+    e.draw = function(self)
+        rectfill(x, y, x + w, y + h, 15)
+    end
+    e.get_rect = function(self) return x, x + w, y, y + h end
+    return e
+end
+
+function make_floor_item(name, spri3, x, y)
     local e = make_ent(spri3, x, y)
-    e.moveable = true
+    populate_table(e, "moveable=true,taken=false,name=" .. name)
 
     function e.try_move(self, dx, dy)
         e:move(self.x + dx, self.y + dy)
-
-        local fail = false
-        for ent in all(ents) do
-            if ent != self then
-                local col = collide_ents(self, ent)
-                if col[1] != 0 or col[2] != 0 then
-                    fail = true
-                    break
-                end
-            end
-        end
         local x1, x2, y1, y2 = self:get_rect()
         if x1 <= 0 or x2 >= cafe_size[1] * 12 + 1 or y1 <= 0 or y2 >= cafe_size[2] * 12 + 1 then
-            fail = true
-        end
-        if fail then
             self.x -= dx
             self.y -= dy
             self:calculate_rect()
         end
-        
     end
 
     return e

@@ -52,7 +52,7 @@
    { "name": "Slice 26", "color": "#0000ffff", "data": "x", "keys": [{ "frame": 0, "bounds": {"x": 72, "y": 8, "w": 8, "h": 5 }, "pivot": {"x": 0, "y": -3 } }] },
    { "name": "Slice 27", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 24, "y": 13, "w": 7, "h": 14 } }] },
    { "name": "Slice 28", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 31, "y": 13, "w": 7, "h": 15 } }] },
-   { "name": "Slice 29", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 38, "y": 13, "w": 7, "h": 9 } }] },
+   { "name": "Slice 29", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 38, "y": 13, "w": 7, "h": 9 }, "pivot": {"x": 0, "y": -3 } }] },
    { "name": "Slice 30", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 45, "y": 13, "w": 13, "h": 22 } }] },
    { "name": "Slice 31", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 0, "y": 16, "w": 13, "h": 13 } }] },
    { "name": "Slice 32", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 13, "y": 16, "w": 9, "h": 11 } }] },
@@ -93,7 +93,11 @@
    { "name": "Slice 67", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 55, "y": 121, "w": 5, "h": 7 } }] },
    { "name": "Slice 68", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 117, "y": 21, "w": 11, "h": 13 } }] },
    { "name": "Slice 69", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 52, "y": 121, "w": 3, "h": 7 } }] },
-   { "name": "Slice 70", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 43, "y": 125, "w": 9, "h": 3 } }] }
+   { "name": "Slice 70", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 43, "y": 125, "w": 9, "h": 3 } }] },
+   { "name": "Slice 71", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 38, "y": 125, "w": 5, "h": 3 } }] },
+   { "name": "Slice 72", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 93, "y": 118, "w": 5, "h": 5 } }] },
+   { "name": "Slice 73", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 31, "y": 122, "w": 7, "h": 6 } }] },
+   { "name": "Slice 74", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 24, "y": 122, "w": 7, "h": 6 } }] }
   ]
  }
 }

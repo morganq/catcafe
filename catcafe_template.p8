@@ -12,7 +12,8 @@ cartdata("catcafe_0")
 #include ent.lua
 #include player.lua
 #include customer.lua
-#include state_game.lua
+#include game.lua
+#include game_draw.lua
 #include src.lua
 
 -- gfx

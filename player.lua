@@ -25,7 +25,7 @@ function make_player(x, y)
         end
 
         for ent in all(ents) do
-            if ent != self then
+            if ent.collides and ent != self then
                 local col = collide_ents(self, ent)
                 self.x += col[1]
                 self.y += col[2]
