@@ -13,6 +13,9 @@ function _draw()
             spr(i, ox, oy)
             rect(ox - 1 - m[5], oy - 1 - m[6], ox + m[3] - m[5], oy + m[4] - m[6], 6)
             print(i, ox - 1, oy - 6, 0)
+            if m[11] > 0 then
+                print(m[11], ox + 10, oy - 6, 12)
+            end
             pset(ox, oy, 8)
             if time % 8 < 4 and m[9] > 0 and m[10] > 0 then
                 rectfill(ox + m[7], oy + m[8], ox + m[7] + m[9], oy + m[8] + m[10], 0)

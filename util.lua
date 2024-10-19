@@ -1,9 +1,18 @@
 SPRITE_META = {}
-for i = 1, #SPRITE_META_STR, 20 do
-    function extract(z)
-        return tonum(SPRITE_META_STR[i + z] .. SPRITE_META_STR[i + z + 1], 0x1)
+local i = 1
+while i < #SPRITE_META_STR do
+    function next()
+        local value = tonum(SPRITE_META_STR[i] .. SPRITE_META_STR[i + 1], 0x1)
+        i += 2
+        return value
+    end    
+    local len = next()
+    printh(len)
+    local meta = split"0,0,0,0,0,0,0,0,0,0,0"
+    for j = 1, len do
+        meta[j] = next()
+        if j == 5 or j == 6 then meta[j] = meta[j] - 127 end
     end
-    local meta = {extract(0), extract(2), extract(4), extract(6), extract(8) - 127, extract(10) - 127, extract(12), extract(14), extract(16), extract(18)}
     add(SPRITE_META, meta)
 end
 
@@ -98,4 +107,13 @@ function string_table(s)
     local z = {}
     populate_table(z, o)
     return z
+end
+
+function up_down_t(x, total, cap)
+	local ma = cap - mid(abs(x - total/2) - (total / 2 - cap), 0, cap)
+	return ma / cap
+end
+
+function cos_ease(x)
+	return cos(x / 2) * -0.5 + 0.5 
 end

@@ -49,24 +49,33 @@ state_game.draw = function()
     end
 
     if activity.name == "moving" then
-        controls = {"place", "rotate"}
-        fillp(0b0101111101011111.1)
-        local x1, x2, y1, y2 = activity.ent:get_rect()
-        local ax1, ay1, ax2, ay2 = max(x1 - 8, 0), max(y1 - 8, 0), min(x2 + 8, cspx), min(y2 + 8, cspy)
-        local bx1, by1, bx2, by2 = max(x1 - 4, 0), max(y1 - 4, 0), min(x2 + 4, cspx), min(y2 + 4, cspy)
-        clip(-cx + ax1, -cy + ay1, ax2-ax1, ay2-ay1)
-        rectfill(0, 0, 127, 127, 15)
-        clip(-cx + bx1, -cy + by1, bx2-bx1, by2-by1)
-        rectfill(0, 0, 127, 127, 7)     
-        clip(-cx + ax1, -cy + ay1, ax2-ax1, ay2-ay1)   
-        for ent in all(ents) do
-            if ent.blocks_placement and ent != activity.ent then
-                local r = pack(ent:get_rect())
-                rectfill(r[1], r[3], r[2], r[4], 9)
+        if activity.counter_only then
+            local counters = get_counters()
+            for c in all(counters) do
+                local x,y = unpack(c.counter_center)
+                y -= c.counter_height
+                rect(x - 1, y - 1, x + 1, y + 1, 7)
             end
+        else
+            controls = {"place", "rotate"}
+            fillp(0b0101111101011111.1)
+            local x1, x2, y1, y2 = activity.ent:get_rect()
+            local ax1, ay1, ax2, ay2 = max(x1 - 8, 0), max(y1 - 8, 0), min(x2 + 8, cspx), min(y2 + 8, cspy)
+            local bx1, by1, bx2, by2 = max(x1 - 4, 0), max(y1 - 4, 0), min(x2 + 4, cspx), min(y2 + 4, cspy)
+            clip(-cx + ax1, -cy + ay1, ax2-ax1, ay2-ay1)
+            rectfill(0, 0, 127, 127, 15)
+            clip(-cx + bx1, -cy + by1, bx2-bx1, by2-by1)
+            rectfill(0, 0, 127, 127, 7)     
+            clip(-cx + ax1, -cy + ay1, ax2-ax1, ay2-ay1)   
+            for ent in all(ents) do
+                if ent.blocks_placement and ent != activity.ent then
+                    local r = pack(ent:get_rect())
+                    rectfill(r[1], r[3], r[2], r[4], 9)
+                end
+            end
+            clip()
+            fillp()
         end
-        clip()
-        fillp()
     end
 
     if activity.name == "moving" then
@@ -100,6 +109,7 @@ state_game.draw = function()
             if tree.title == "stats" then
                 children = {
                     {title="max cats", value=stats["max_cats"]},
+                    {title="appeal", value=stats["appeal"]},
                     {title="seats", value=#get_seats()},
                     {title="cafe menu:", color=2},
                 }
@@ -230,5 +240,11 @@ state_game.draw = function()
             spr(74, o + 8, 120)
             print(controls[2], o + 17, 121, 0)        
         end
+    end
+    if #hints > 0 then
+        local h = hints[1]
+        local yo = up_down_t(h.time, 150, 7) * 8
+        rectfill(0, 127 - yo, 127, 135 - yo, 10)
+        center_print(h.text, 64, 129 - yo, 0)
     end
 end

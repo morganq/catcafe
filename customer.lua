@@ -27,6 +27,11 @@ function make_customer()
     else
         e.pal[7] = rnd(split"7,6,9,10")
     end
+    e.hair = rnd(split"76,78,80,82")
+    e.hc = rnd(split"10,1,2,2,4,4,9,6")
+    if e.pal[15] == 2 or e.pal[15] == 4 then
+        e.hc = 1--rnd(split"1,")
+    end
     e.desires = generate_desires()
     local _move = e.move
     e.move = function(self, x, y)
@@ -36,17 +41,22 @@ function make_customer()
     end
     local _draw = e.draw
     e.draw = function(self)
+        function ds(b, x, y)
+            _draw(self, b, x, y)
+            pal({[4] = self.hc})
+            spr(self.hair + ((self.dir[2] < 0) and 1 or 0), self.x - 5.5, self.y - 9)
+        end
         if self.move_timer > 0 then
             --fillp(0b0101101001011010.11)
             fillp(0b0101010101010101.11)
             if self.move_timer > 5 then
-                _draw(self, false, self.oldx, self.oldy)
+                ds(false, self.oldx, self.oldy)
             else
-                _draw(self, false)
+                ds(false)
             end
             fillp()
         else
-            _draw(self)
+            ds()
         end
         if self.state == "queued" and self.state_timer > 150 then
             spr(69, self.x - 2, self.y - 13)
@@ -84,8 +94,12 @@ function make_customer()
                 self.given = ((self.sale - 0.5) \ 100 + 1) * 100
             end
         else
-            self:set_state("leave")
+            self:leave()
         end        
+    end
+    e.leave = function(self)
+        self:set_state("leave")
+        self:move(door.x - 4, door.y + 3)        
     end
     e.update = function(self)
         if self.move_timer > 0 then self.move_timer -= 1 end
@@ -96,8 +110,7 @@ function make_customer()
             end
         elseif self.state == "queued" then
             if self.state_timer >= 600 then
-                self:set_state("leave")
-                self:move(door.x - 4, door.y + 3)
+                self:leave()
                 next_customer()
             end
         elseif self.state == "leave" then
@@ -110,8 +123,7 @@ function make_customer()
             if self.state_timer > 600 then
                 if rnd() < 0.5 then
                     self.seat.taken = false
-                    self:set_state("leave")
-                    self:move(door.x - 4, door.y + 3)
+                    self:leave()
                 else
                     self.seat.taken = false
                     self.desires = generate_desires()
@@ -128,8 +140,7 @@ function make_customer()
                     self.dir = self.seat.dir
                     self:set_state("seated")
                 else
-                    self:set_state("leave")
-                    self:move(door.x - 4, door.y + 3)
+                    self:leave()
                 end
             end
         end
@@ -149,7 +160,8 @@ function update_customers()
         if rnd(1) < 0.1 then -- var
             local c = make_customer()
             add(customers, c)
-            walkin_timer = 200 + rnd(300) \ 1
+            --walkin_timer = 200 + rnd(300) \ 1
+            walkin_timer = 60
         end
     end
     walkin_timer -= 1
@@ -158,6 +170,6 @@ end
 function next_customer()  
     deli(customer_queue, 1)
     for c in all(customer_queue) do
-        c.y += 9
+        c:move(c.x, c.y + 9)
     end
 end

@@ -3,7 +3,7 @@ function make_ent(spri, x, y, depth_offset)
     if not meta then meta = SPRITE_META[spri[1]] end
     local e = {spri=spri, x=x + meta[3] \ 2, y=y + meta[4] \ 2, depth_offset=depth_offset or 0, meta=meta, hflip = false}
     e.dir = {0,1}
-    populate_table(e, "moveable=false,interactable=false,blocks_placement=true,collides=true,shaking=0,name=none")
+    populate_table(e, "moveable=false,interactable=false,blocks_placement=true,collides=true,shaking=0,name=none,height=0,imm_offset=0")
     e.draw = function(self, invalid, fakex, fakey)
         if self.pal then pal(self.pal) end
         local s = self.spri
@@ -31,18 +31,23 @@ function make_ent(spri, x, y, depth_offset)
         end
         x = fakex or x
         local y = fakey or self.y
+        y -= self.height
+        x -= self.imm_offset
+        y -= self.imm_offset
         sprc(s, x, y, self.hflip)
         pal()
-        --pset(self.x, self.y, 0)
+        --pset(self.x, self.y, 8)
         if false then
             local x1, x2, y1, y2 = self:get_rect()
             rectfill(x1, y1, x2, y2, 12)
         end
         if selected_ent == self or (activity.name == "moving" and activity.ent == self) then
-            outline_sprc(invalid and 8 or 7, s, x + self.meta[5] * (self.hflip and -1 or 1), self.y + self.meta[6], self.hflip)
+            outline_sprc(invalid and 8 or 7, s, x + self.meta[5] * (self.hflip and -1 or 1), y + self.meta[6], self.hflip)
         end
     end
-    e.update = function(self) end
+    e.update = function(self)
+        self.imm_offset = 0
+    end
     e.set_sprite = function(self, i)
         self.spri = i
         self.meta = SPRITE_META[i]
@@ -114,8 +119,8 @@ function make_blocker(x, y, w, h)
     return e
 end
 
-function make_floor_item(name, spri3, x, y)
-    local e = make_ent(spri3, x, y)
+function make_floor_item(name, spri3, x, y, depth_offset)
+    local e = make_ent(spri3, x, y, depth_offset)
     populate_table(e, "moveable=true,taken=false,name=" .. name)
 
     function e.try_move(self, dx, dy)
@@ -128,6 +133,22 @@ function make_floor_item(name, spri3, x, y)
         end
     end
 
+    return e
+end
+
+function make_counter_item(name, spri3, x, y, depth_offset)
+    local e = make_floor_item(name, spri3, x, y, depth_offset)
+    e.moveable = false
+    return e
+end
+
+function make_counter(spri3, x, y)
+    local e = make_ent(spri3, x, y)
+    populate_table(e, "is_counter=true")
+    local x1, x2, y1, y2 = e:get_rect()
+    
+    e.counter_center = {(x2 + x1) / 2 + 0.5, (y2 + y1) / 2}
+    e.counter_height = e.meta[11] * 2 + 1
     return e
 end
 

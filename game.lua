@@ -9,10 +9,7 @@
 
 
 --[[ TODO
- - Scrolling
- - Stat page
  - Make buying stuff use stats etc.
- - Counters
  - Customers use chairs
  - Make appliances
 
@@ -21,7 +18,7 @@
 BILLS = {1, 5, 10, 20}
 
 function play_activity() return {name = "play"} end
-function moving_activity(ent) return {name = "moving", ent = ent, drop_valid=true} end
+function moving_activity(ent, counter) return {name = "moving", ent = ent, drop_valid=true, counter_only=counter, selected_counter = 1} end
 function register_activity(customer)
     return {
         name = "register",
@@ -38,7 +35,7 @@ function phone_activity()
             {img = 55, title = "stats", scroll_page = 8, children = {}},
             {img = 56, title = "furniture", scroll_page = 4, children = {
                 {img = 27, title = "chair", type = "buy_floor", sprite={27,28,29}, price = 20},
-                {img = 36, title = "table", type = "buy_floor", price = 50},
+                {img = 36, title = "table", type = "buy_floor", price = 50, stat = "appeal", stat_value = "0.5"},
                 {img = 30, title = "bookshelf", type = "buy_floor", price = 100, stat = "max_cats", stat_value = "0.25"},
                 {img = 61, title = "rug 2x2", type = "buy_floor", price = 100},
                 {img = 61, title = "rug 3x2", type = "buy_floor", price = 100},
@@ -53,7 +50,8 @@ function phone_activity()
             }},
             {img = 57, title = "appliances", scroll_page = 4, children = {
                 {img = 53, title = "register", type = "buy_counter", price = 0},
-                {img = 52, title = "espresso", type = "buy_counter", price = 100, menu = "espresso"},
+                {img = 53, title = "grinder", type = "buy_counter", price = 100, stat = "coffee_price", stat_value = "1", description = "raises coffee price +$1"},
+                {img = 52, title = "espresso", type = "buy_counter", price = 1000, menu = "espresso"},
             }},        
             {img = 58, title = "restock", scroll_page = 8, children = {}},
             {img = 60, title = "floorplan", scroll_page = 8, children = {
@@ -93,6 +91,16 @@ function get_seats(must_be_empty)
     return s
 end
 
+function get_counters(unoccupied)
+    local c = {}
+    for ent in all(ents) do
+        if ent.is_counter and (not unoccupied or not ent.counter_item) then
+            add(c,ent)
+        end
+    end
+    return c
+end
+
 state_game = {}
 state_game.start = function()
     cafe_size = {6,5}
@@ -101,12 +109,14 @@ state_game.start = function()
     make_floor_item("table",36, 11, 11)
     make_floor_item("chair",{27,28,29}, 41, 11)
     -- opt: string setup
-    make_ent(47, 0, 35)
+    make_counter(47, 0, 35)
     make_ent(48, 12, 35)
-    make_ent(49, 25, 35)
-    make_ent(50, 36, 35)
-    make_ent(51, 48, 35)
-    register = make_ent(53, 27, 30, 8)
+    local rc = make_counter(49, 25, 35)
+    make_counter(50, 36, 35)
+    make_counter(51, 48, 35)
+    make_counter(75, 48, 45)
+    register = make_counter_item("register",53, 27, 32, 8)
+    register.height = 3
     register.interactable = true
     register.interact = function(self)
         if #customer_queue > 0 then
@@ -114,6 +124,7 @@ state_game.start = function()
         else
         end
     end
+    rc.counter_item = register
     door = make_ent(35, 26, -13)
     make_blocker(door.x - 6, door.y + 7, 10, register.y - door.y)
 
@@ -123,48 +134,96 @@ state_game.start = function()
     selected_ent = nil
 
     activity = play_activity()
-    stats = {max_cats = 1.9}
+    stats = {max_cats = 1.0, appeal = 1.0}
     stock = {beans = 100, pastries = 0, ingredients = 0, catfood = 100}
 
     init_customers()
     time = 0
     daytime = 0
+    hints = {}
+end
+
+function hint(s)
+    for hint in all(hints) do
+        if s == hint.text then
+            hint.time = 0
+            return
+        end
+    end
+    add(hints, {text=s, time=0})
 end
 
 state_game.update = function()
     time += 0x0.0001
     daytime += 1
+    if #hints > 0 then
+        hints[1].time += 1
+        if hints[1].time > 150 then
+            deli(hints,1)
+        end
+    end
     update_customers()
+    for ent in all(ents) do
+        ent:update()
+    end
     if activity.name == "play" then
         player:control()
         if btnp(B_BACK) then
             activity = phone_activity()
         end
+
+
+
     elseif activity.name == "moving" then
         local e = activity.ent
-        e:try_move( (tonum(btnp(1)) - tonum(btnp(0))) * 2 , (tonum(btnp(3)) - tonum(btnp(2))) * 2 )
-
+        local dx, dy = tonum(btnp(1)) - tonum(btnp(0)),tonum(btnp(3)) - tonum(btnp(2))
         activity.drop_valid = true
-        for ent in all(ents) do
-            if ent != e then
-                local col = collide_ents(e, ent)
-                if col[1] != 0 or col[2] != 0 then
-                    activity.drop_valid = false
-                    break
+        if activity.counter_only then
+            local counters = get_counters()
+            activity.selected_counter = mid(activity.selected_counter + dx + dy, 1, #counters)
+            printh(activity.selected_counter)
+            local c = counters[activity.selected_counter]
+            e:move( c.counter_center[1], c.counter_center[2] )
+            e.height = c.counter_height + 2
+            if c.counter_item then c.counter_item.imm_offset = 5 end
+            if btnp(B_CONFIRM) then
+                if c.counter_item then
+                    local other_item = c.counter_item
+                    c.counter_item = activity.ent
+                    activity = moving_activity(other_item, true)
+                else
+                    c.counter_item = activity.ent
+                    activity = play_activity()
+                end
+                
+            end            
+        else
+            e:try_move( dx * 2 , dy * 2 )
+            for ent in all(ents) do
+                if ent != e then
+                    local col = collide_ents(e, ent)
+                    if col[1] != 0 or col[2] != 0 then
+                        activity.drop_valid = false
+                        break
+                    end
                 end
             end
+            if btnp(B_CONFIRM) then
+                if activity.drop_valid then
+                    activity = play_activity()
+                else
+                    activity.ent:shake()
+                    --hint("bad spot")
+                end
+            end            
         end
 
-        if btnp(B_CONFIRM) then
-            if activity.drop_valid then
-                activity = play_activity()
-            else
-                activity.ent:shake()
-            end
-        end
         if btnp(B_BACK) then
             activity.ent:rotate()
         end
+
+
+
     elseif activity.name == "phone" then
         local tree, selected = get_phone_state()
         local cursor = activity.cursor
@@ -180,6 +239,20 @@ state_game.update = function()
                     money -= item.price
                     local e = make_floor_item(item.title, item.sprite or item.img, 25, 0)
                     activity = moving_activity(e)
+                else
+                    hint("not enough money")
+                end
+            elseif item.type == "buy_counter" then
+                if #get_counters(true) == 0 then
+                    hint("no counter space")
+                else
+                    if item.price <= money then
+                        money -= item.price
+                        local e = make_counter_item(item.title, item.sprite or item.img, 25, 0)
+                        activity = moving_activity(e, true)
+                    else
+                        hint("not enough money")
+                    end
                 end
             end
         end
@@ -189,7 +262,10 @@ state_game.update = function()
             else
                 deli(cursor, #cursor)
             end
-        end        
+        end       
+        
+        
+
     elseif activity.name == "register" then
         local dx = tonum(btnp(1)) - tonum(btnp(0))
         activity.selected_bill = mid(activity.selected_bill + dx, 1, 4)
@@ -206,9 +282,10 @@ state_game.update = function()
         elseif activity.change < 0 or #activity.bills > 10 then
             activity.change = activity.given - activity.sale
             activity.bills = {}
+            hint("wrong change")
         end        
-    end
-    for ent in all(ents) do
-        ent:update()
+        if btnp(B_BACK) then
+            activity = play_activity()
+        end        
     end
 end
