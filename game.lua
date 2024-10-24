@@ -1,10 +1,23 @@
---[[ Stats
- - Money: based on sales
- - Stars: based on quantity of good customer experience, which is based on: food variety, cat exposure, speed of being helped
- - Cat Capacity: based on furniture and toys etc
- - Max Furniture Pieces: based on floorplan
- - Customer Capacity: based on tables + chairs
- - Restock stats: Beans, Ingredients, Cat Food
+--[[
+
+Goal: Get to 9x7
+
+]]
+
+--[[ Feedback
+
+ - need cheap stuff to decorate
+ - didn't know how stars were acquired via cats
+  * gain star at the moment they interact with the cat
+ - need clear goal
+ - no time to do other things when making change all the time
+ - no other gameplay but making change is tiring
+    1. treats for cats - moves them around, but maybe not mechanically clear?
+    2. play with cat - ?
+    3. talk to customer to get tip? - odd feeling
+ - overpriced expansions
+ - 
+
 ]]
 
 
@@ -31,33 +44,35 @@ function register_activity(customer)
     }
 end
 function phone_activity()
+    cats_menu = {}
+    for cat in all(cats_available) do
+        add(cats_menu, {img=cat.portrait, img_pal=cat.pal, title=cat.name, type="adopt_cat", features = cat})
+    end
     return {name = "phone", tree = {scroll_page = 8, children = {
-            {img = 55, title = "stats", scroll_page = 8, children = {}},
+            {img = 55, title = "info", scroll_page = 8, children = {}},
             {img = 56, title = "furniture", scroll_page = 4, children = {
-                {img = 27, title = "chair", type = "buy_floor", sprite={27,28,29}, price = 20},
-                {img = 36, title = "table", type = "buy_floor", price = 50, stat = "appeal", stat_value = "0.5"},
-                {img = 30, title = "bookshelf", type = "buy_floor", price = 100, stat = "max_cats", stat_value = "0.25"},
-                {img = 61, title = "rug 2x2", type = "buy_floor", price = 100},
-                {img = 61, title = "rug 3x2", type = "buy_floor", price = 100},
-                {img = 61, title = "rug 3x3", type = "buy_floor", price = 100},
-                {img = 61, title = "rug 4x3", type = "buy_floor", price = 100},
-                {img = 61, title = "rug 4x4", type = "buy_floor", price = 100},
-                {img = 61, title = "rug 5x4", type = "buy_floor", price = 100},
-                {img = 61, title = "rug 5x5", type = "buy_floor", price = 100},
-                {img = 61, title = "rug 6x5", type = "buy_floor", price = 100},
-                {img = 61, title = "rug 6x6", type = "buy_floor", price = 100},
-                {img = 61, title = "rug 7x6", type = "buy_floor", price = 100},
+                {img = 27, title = "chair", type = "buy_floor", sprite={27,28,29}, price = 20, description="always good to have more seating"},
+                {img = 36, title = "table", type = "buy_floor", price = 40, stat = "appeal", stat_value = "0.5", description="customers usually expect tables"},
+                {img = 30, title = "bookshelf", type = "buy_floor", price = 60, stat = "max_cats", stat_value = "0.25", description="cats might like to climb it"},
             }},
             {img = 57, title = "appliances", scroll_page = 4, children = {
-                {img = 53, title = "register", type = "buy_counter", price = 0},
-                {img = 53, title = "grinder", type = "buy_counter", price = 100, stat = "coffee_price", stat_value = "1", description = "raises coffee price +$1"},
-                {img = 52, title = "espresso", type = "buy_counter", price = 1000, menu = "espresso"},
+                {img = 53, title = "register", type = "buy_counter", price = 100},
+                {img = 84, title = "drip machine", type = "buy_counter", price = 50},
+                {img = 86, title = "grinder", type = "buy_counter", price = 50, fn = function() prices["drip coffee"] = 3 end, description = "raises drip coffee price +$1"},
+                {img = 97, title = "pstry case", type = "buy_counter", price = 50, menu = {"sweet pastry", "savory pastry"}, description = "adds pastries to the menu"},
+                {img = 52, title = "espresso", type = "buy_counter", price = 500, stat = "appeal", stat_value = "0.5", menu = {"espresso"}, description = "adds espresso to the menu"},
+                {img = 85, title = "frother", type = "buy_counter", price = 150, stat = "appeal", stat_value = "1.0", menu = {"cappuccino", "latte"}, requires="espresso", description = "adds espresso milk drinks to the menu"},
+                
             }},        
-            {img = 58, title = "restock", scroll_page = 8, children = {}},
-            {img = 60, title = "floorplan", scroll_page = 8, children = {
-
+            --{img = 58, title = "restock", scroll_page = 8, children = {}},
+            {img = 60, title = "floorplan", scroll_page = 4, children = {
+                {img = 58, title = "6x6 cafe", price = 200, type="floorplan", plan={6,6}},
+                {img = 58, title = "7x6 cafe", price = 600, type="floorplan", plan={7,6}},
+                {img = 58, title = "7x7 cafe", price = 1100, type="floorplan", plan={7,7}},
+                {img = 58, title = "8x7 cafe", price = 2000, type="floorplan", plan={8,7}},
+                {img = 58, title = "9x7 cafe", price = 5000, type="floorplan", plan={9,7}},
             }},
-            {img = 59, title = "adopt!", scroll_page = 4, children = {}},
+            {img = 59, title = "adopt!", scroll_page = 4, children = cats_menu},
         }
     }, cursor = {1}}
 end
@@ -70,11 +85,15 @@ function get_phone_state()
     return tree, selected
 end
 
-prices = {["drip coffee"] = 3, espresso = 4}
+prices = {["drip coffee"] = 2, espresso = 4, latte = 5, cappuccino = 5, ["sweet pastry"] = 4, ["savory pastry"] = 5}
 function get_menu()
     local menu = { "drip coffee" }
     for ent in all(ents) do
-        if ent.menu_add then add(menu, ent.menu_add) end
+        if ent.menu then
+            for item in all(ent.menu) do
+                add(menu, item)
+            end
+        end
     end
     return menu
 end
@@ -101,21 +120,54 @@ function get_counters(unoccupied)
     return c
 end
 
+function get_sitting_spots()
+    local sits = {}
+    for c in all(get_counters(true)) do add(sits, c) end
+    for c in all(get_seats(true)) do add(sits, c) end
+    return sits
+end
+
+function has_ent(name)
+    for ent in all(ents) do if ent.name == name then return true end end
+    return false
+end
+
+function get_max_cats()
+    local n = sqrt(stars) / 3.17
+    return stats["max_cats"] + n
+end
+
 state_game = {}
 state_game.start = function()
     cafe_size = {6,5}
     ents = {}
+    cats_available = {}
+    local nums = {}
+    for i = 1, 100 do add(nums, i) end
+    for i = 1, 16 do
+        local ni = rnd(#nums) \ 1 + 1
+        local num = nums[ni]
+        deli(nums, ni)
+        add(cats_available, generate_cat_features(num))
+    end
+    
+    description_t = 0
 
-    make_floor_item("table",36, 11, 11)
-    make_floor_item("chair",{27,28,29}, 41, 11)
+    make_floor_item("table",36, 48, 12)
+    make_floor_item("chair",{27,28,29}, 52, 2)
     -- opt: string setup
-    make_counter(47, 0, 35)
-    make_ent(48, 12, 35)
-    local rc = make_counter(49, 25, 35)
+    local rc1 = make_counter(47, 0, 35)
+    flap = make_ent(48, 12, 35)
+    local rc2 = make_counter(49, 25, 35)
     make_counter(50, 36, 35)
     make_counter(51, 48, 35)
     make_counter(75, 48, 45)
-    register = make_counter_item("register",53, 27, 32, 8)
+
+    drip = make_counter_item("drip machine",84, 2, 34, 1)
+    drip.height = 3
+    rc1.counter_item = drip 
+
+    register = make_counter_item("register",53, 27, 34, 1)
     register.height = 3
     register.interactable = true
     register.interact = function(self)
@@ -124,55 +176,142 @@ state_game.start = function()
         else
         end
     end
-    rc.counter_item = register
+    rc2.counter_item = register
+
+
+    day_num = 1
     door = make_ent(35, 26, -13)
-    make_blocker(door.x - 6, door.y + 7, 10, register.y - door.y)
+    blocker = make_blocker(door.x - 10, door.y + 4, 10, register.y - door.y - 6)
 
     player = make_player(31, 8)
 
-    money = 25
+    money = 50
+    stars = 0
     selected_ent = nil
 
     activity = play_activity()
-    stats = {max_cats = 1.0, appeal = 1.0}
+    stats = {max_cats = 1.0, appeal = 1.5}
     stock = {beans = 100, pastries = 0, ingredients = 0, catfood = 100}
 
     init_customers()
+    cats = {}
+
     time = 0
     daytime = 0
     hints = {}
+    closing_time = 13
+    closing_ticks = 600 * (closing_time - 7)
+    cafe_open = false
+    bump_money = 0
+    bump_stars = 0
+    bump_change = 0
+    particle_stars = {}
+    today_stats = string_table("customers=0,stars earned=0,sales=0,tips=0,total=0")
+    today_stats_order = split("customers,stars earned,sales,tips,total")
 end
 
 function hint(s)
-    for hint in all(hints) do
-        if s == hint.text then
-            hint.time = 0
-            return
+    hints[1] = {text=s, time=0}
+end
+
+function add_star(x, y)
+    --stars += n
+    --bump_stars = 10
+    add(particle_stars, {x=x + rnd(4) - 2, y=y + rnd(4) - 2, time=time})
+    today_stats["stars earned"] += 1
+end
+function add_money(n)
+    money += n
+    bump_money = 10
+end
+
+function end_day()
+    reporthints = split("hint: customers\ngive you a star for\neach cat they meet,hint: appliances\ncan expand your\nmenu and earn you\nmore money,hint: buying\nfurniture will\nattract more\ncustomers,hint: customers\nare more likely to\ntip if they meet\nsome cats")
+    time = 0
+    daytime = 0
+    for i = 1, 400 do
+        --fillp(0b1111000011110000.1)
+        --fillp(0b1100100100110110.1)
+        fillp(0b0.1 + (0b1111111111111110 << (i)))
+        rectfill(0,0,127,127,1)
+        fillp()
+        if i > 16 then
+            rectfill(23, 7, 104, 120, 1)
+            rectfill(24, 8, 103, 119, 7)
+            center_print("day " .. day_num .. " report", 64, 11, 1)
+            line(30, 19, 97, 19, 1)
+            for j = 1, #today_stats_order do
+                local s = today_stats_order[j]
+                if i > j * 30 + 15 then
+                    print(s, 27, 24 + j * 11, 1)
+                end
+                if i > j * 30 + 25 then
+                    local v = (j > 2 and "$" or "") .. today_stats[s]
+                    print(v, 100 - print(v, 0, -100), 24 + j * 11, 0)
+                end
+            end
+            if i > 200 then
+                if reporthints[day_num] then
+                    print(reporthints[day_num], 27, 94, 1)
+                end
+            end
         end
+        flip()
     end
-    add(hints, {text=s, time=0})
+    day_num += 1
+    today_stats = string_table("customers=0,stars earned=0,sales=0,tips=0,total=0")
+    cafe_open = false
 end
 
 state_game.update = function()
+    
+    door.interactable = false
     time += 0x0.0001
-    daytime += 1
+    if not cafe_open then
+        if time > 0x0.0080 and daytime == 0 then
+            door.outline_color = (time % 0x0.002 < 0x0.001) and 10 or nil
+        end
+        door.interactable = true
+        if daytime == 0 then
+            door.interact_text = "open cafe"
+            door.interact = function(self) cafe_open = true end
+        else
+            door.interact_text = "go home"
+            door.interact = function(self) end_day() end
+        end
+    end
+
+    if daytime > 10 then
+        end_day()
+    end
+
+    if cafe_open and activity.name != "phone" then
+        
+        daytime += 1
+        if daytime >= closing_ticks then
+            cafe_open = false
+        end
+        update_customers()        
+    end
+    if activity.name != "phone" then
+        update_cats()
+        for ent in all(ents) do
+            ent:update()
+        end        
+    end
+
     if #hints > 0 then
         hints[1].time += 1
         if hints[1].time > 150 then
             deli(hints,1)
         end
     end
-    update_customers()
-    for ent in all(ents) do
-        ent:update()
-    end
+
     if activity.name == "play" then
         player:control()
         if btnp(B_BACK) then
             activity = phone_activity()
         end
-
-
 
     elseif activity.name == "moving" then
         local e = activity.ent
@@ -184,7 +323,7 @@ state_game.update = function()
             printh(activity.selected_counter)
             local c = counters[activity.selected_counter]
             e:move( c.counter_center[1], c.counter_center[2] )
-            e.height = c.counter_height + 2
+            e.height = c.counter_height
             if c.counter_item then c.counter_item.imm_offset = 5 end
             if btnp(B_CONFIRM) then
                 if c.counter_item then
@@ -222,22 +361,42 @@ state_game.update = function()
             activity.ent:rotate()
         end
 
-
-
     elseif activity.name == "phone" then
         local tree, selected = get_phone_state()
         local cursor = activity.cursor
         local dy = tonum(btnp(3)) - tonum(btnp(2))
+        if dy != 0 then description_t = 0 end
         cursor[#cursor] = mid(selected + dy, 1, #tree.children)
         if btnp(B_CONFIRM) then
             local item = tree.children[selected]
             if item.children then
                 add(cursor, 1)
                 activity.scroll = 0
+            elseif item.type == "floorplan" then
+                if item.price <= money then
+                    money -= item.price
+                    local dx, dy = item.plan[1] - cafe_size[1], item.plan[2] - cafe_size[2]
+                    for c in all(get_counters()) do
+                        c:move(c.x, c.y + dy * 12)
+                        if c.counter_item then
+                            c.counter_item:move(c.counter_item.x, c.counter_item.y + dy * 12)
+                        end
+                    end
+                    flap:move(flap.x, flap.y + dy * 12)
+                    blocker.y += dy * 12
+
+                    activity = play_activity()
+                    cafe_size = item.plan
+                else
+                    hint("not enough money")
+                end                
             elseif item.type == "buy_floor" then
                 if item.price <= money then
                     money -= item.price
                     local e = make_floor_item(item.title, item.sprite or item.img, 25, 0)
+                    if item.stat then
+                        stats[item.stat] += item.stat_value
+                    end
                     activity = moving_activity(e)
                 else
                     hint("not enough money")
@@ -245,14 +404,30 @@ state_game.update = function()
             elseif item.type == "buy_counter" then
                 if #get_counters(true) == 0 then
                     hint("no counter space")
+                elseif has_ent(item.title) then
+                    hint("already owned")
+                elseif item.requires and not has_ent(item.requires) then
+                    hint(item.title .. " requires " .. item.requires)
                 else
                     if item.price <= money then
                         money -= item.price
                         local e = make_counter_item(item.title, item.sprite or item.img, 25, 0)
+                        e.menu = item.menu
+                        if item.fn then item.fn() end
                         activity = moving_activity(e, true)
                     else
                         hint("not enough money")
                     end
+                end
+            elseif item.type == "adopt_cat" then
+                if has_ent(item.title) then
+                    hint("already adopted " .. item.title .. "!")
+                elseif #cats >= get_max_cats()\1 then
+                    hint("reached maximum cats")
+                else
+                    add(cats, make_cat(item.features.index, door.x - 3, door.y + 8))
+                    stats["appeal"] += 0.5
+                    activity = play_activity()
                 end
             end
         end
@@ -273,9 +448,18 @@ state_game.update = function()
             local v = BILLS[activity.selected_bill]
             add(activity.bills, v)
             activity.change -= v
+            bump_change = 4
         end
         if activity.change == 0 then
-            money += activity.sale
+            add_money(activity.sale)
+            
+            local tip = 0
+            if activity.customer.order.tip then
+                tip = activity.customer.order.tip
+            end
+            today_stats["sales"] += activity.sale - tip
+            today_stats["tips"] += tip
+            today_stats["total"] += activity.sale
             activity.customer:set_state("paid")
             next_customer()
             activity = play_activity()

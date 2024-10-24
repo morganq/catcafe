@@ -26,14 +26,15 @@ function sprc(n, x, y, fx, fy, dw, dh)
     sspr(m[1], m[2], m[3], m[4], x - m[3] / 2 + m[5], y - m[4] / 2 - m[6], dw or m[3], dh or m[4], fx, fy)    
 end
 
-function outline_sprc(c, n, x, y, fx, fy, dw, dh)
+function outline_sprc(c, n, x, y, fx, fy, dw, dh, p)
     pal({c,c,c,c,c,c,c,c,c,c,c,c,c,c,c})
     local off = {{-1,0},{1,0},{0,-1},{0,1}}
     for i = 1, 4 do
         sprc(n, x + off[i][1], y + off[i][2], fx, fy, dw, dh)
     end
-    pal()
+    pal(p)
     sprc(n, x, y, fx, fy, dw, dh)
+    pal()
 end
 
 function draw_paw(x, y, angle, size, color1, color2)
@@ -57,12 +58,16 @@ function draw_paw(x, y, angle, size, color1, color2)
     end
 end
 
-function center_print(s, x, y, color, bgcolor, outlinecolor)
+function center_print(s, x, y, color, bgcolor, outlinecolor, rounded)
 	for s in all(split(s,"\n")) do
 		local w = print(s,0,-600) 
 		local xo = (w - 0.5) \ 2
 		if bgcolor then
-			rectfill(x - xo - 1, y - 1, x + xo + 1, y + 8, bgcolor)
+            
+			rectfill(x - xo - 1, y - 1, x + xo + 1, y + 5, bgcolor)
+            if rounded then
+                rectfill(x - xo - 2, y, x + xo + 2, y + 4, bgcolor)
+            end
 		end
 		if outlinecolor then
 			rect(x - xo - 2, y - 2, x + xo + 2, y + 6, outlinecolor)
@@ -105,7 +110,7 @@ end
 
 function string_table(s)
     local z = {}
-    populate_table(z, o)
+    populate_table(z, s)
     return z
 end
 

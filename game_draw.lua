@@ -1,5 +1,6 @@
 state_game.draw = function()
     local controls = {}
+    local description = nil
     cls(7)
 
     for i = 0, 5 do
@@ -45,7 +46,11 @@ state_game.draw = function()
 
     if selected_ent then
         controls = {"select"}
-        if selected_ent.interactable then controls = {"use"} end
+        if selected_ent.interactable then controls = {selected_ent.interact_text or "use"} end
+    end
+
+    if activity.name == "play" then
+        controls[2] = "phone"
     end
 
     if activity.name == "moving" then
@@ -86,31 +91,69 @@ state_game.draw = function()
 
     -- UI camera
     camera()
+    local w = print(money,0,-100)
+    spr(44, 0, 3, false, false, w + 10)
+    spr(43, w + 10, 3)
+    spr(45, 2, 5)
+    print(money, 9, 6 - bump_money \ 4, 1)
+    bump_money = max(bump_money - 1, 0)
+
+    w = print(stars,0,-100)
+    spr(44, 117 - w, 3, false, false, w + 11)
+    spr(43, 115 - w, 3, true)
+    spr(46, 120, 5)
+    print(stars, 119 - w, 6 - bump_stars \ 4, 1)
+    bump_stars = max(bump_stars - 1, 0)
+    for p in all(particle_stars) do
+        local t = (time - p.time) / 0x0.0020
+        t = t ^ 3
+        local px, py = (p.x - cx) * (1-t) + 120 * t, (p.y - cy) * (1-t) + 5 * t
+        --print("\f9⁶:083e1c0814000000", px, py)
+        spr(46, px, py)
+        if t >= 1 then
+            stars += 1
+            del(particle_stars, p)
+        end
+    end
+
+    -- 1 hour = 20 seconds
+    -- 12 hours = 4 minutes
+    local minutes = ((daytime \ 50) * 5) % 60
+    local hours = 7 + daytime \ 600
+    time_str = ((hours < 13) and hours or hours - 12) .. ":" .. ((minutes < 10) and "0" or "") .. minutes .. (hours < 12 and " am" or " pm")
+    center_print(cafe_open and "open" or "closed", 64, 2, cafe_open and 0 or 8)
+    if not cafe_open then
+        if daytime == 0 then time_str = "6:59 am"
+        else time_str = (closing_time - 12) .. ":01 pm" end
+    end
+    center_print(time_str, 64, 9, 0)
+
+
     if activity.name == "phone" then
         controls = {"select", "back"}
-        rectfill(41,14,88,113, 1)
-        rectfill(36,19,93,108, 1)
+        rectfill(41,4,88,103, 1)
+        rectfill(36,9,93,98, 1)
 
         -- todo: screen lights up and loads
-        rectfill(38,16,91,111, 7)
-        spr(54, 36, 14)
-        spr(54, 89, 14, true)
-        spr(54, 36, 109, false, true)
-        spr(54, 89, 109, true, true)
+        rectfill(38,6,91,101, 7)
+        spr(54, 36, 4)
+        spr(54, 89, 4, true)
+        spr(54, 36, 99, false, true)
+        spr(54, 89, 99, true, true)
 
         local tree, selected = get_phone_state()
-        camera(-38, -18)
-        clip(38, 18, 54, 92)
+        camera(-38, -8)
+        clip(38, 8, 54, 92)
         local y = 3
         local children = tree.children
         if tree.title then
             center_print(tree.title, 26, 0, 2)
             y = 12
-            if tree.title == "stats" then
+            if tree.title == "info" then
                 children = {
-                    {title="max cats", value=stats["max_cats"]},
-                    {title="appeal", value=stats["appeal"]},
-                    {title="seats", value=#get_seats()},
+                    {title="max cats", value=get_max_cats(), description="collect stars to adopt more cats"},
+                    {title="appeal", value=stats["appeal"], description="more appeal = more customers"},
+                    {title="seats", value=#get_seats(), description="customers will stay longer if they can sit"},
                     {title="cafe menu:", color=2},
                 }
                 for item in all(get_menu()) do
@@ -121,16 +164,19 @@ state_game.draw = function()
         end
         local page = (selected - 1) \ tree.scroll_page + 1
         local p1 = (page - 1) * tree.scroll_page + 1
-        local last_page = (#children \ tree.scroll_page + 1)
+        local last_page = (#children \ tree.scroll_page)
         for i = p1, min(p1 + tree.scroll_page - 1, #children) do
             local child = children[i]
+            local have_it = tree.title == "appliances" and has_ent(child.title)
+            have_it = have_it or (child.type == "adopt_cat" and has_ent(child.title))
             local x = 2
             local th = 5
-            if child.type == "buy_floor" or child.type == "buy_counter" then
+            if child.price or child.type == "adopt_cat" then
                 th = 13
             end            
             if selected == i then
-                rectfill(0, y - 2, 53, y + th + 1, 10)
+                rectfill(0, y - 2, 53, y + th + 1, have_it and 6 or 10)
+                description = child.description
             end            
             if child.img then
                 local meta = SPRITE_META[ child.img ]
@@ -146,7 +192,9 @@ state_game.draw = function()
                     y1 += (h - th) \ 2
                     h = th
                 end                
+                if child.img_pal then pal(child.img_pal) end
                 sspr(x1, y1, w, h, dx, dy)
+                pal()
                 x += 11
             elseif child.value then
                 print(child.value \ 1, x + 3, y, 0)
@@ -158,9 +206,9 @@ state_game.draw = function()
             else
             end
             
-            print(child.title, x, y, child.color or 0)
-            if child.type == "buy_floor" or child.type == "buy_counter" then
-                print("$" .. child.price, x, y + 7, child.price > money and 8 or 0)
+            print(child.title, x, y, have_it and 5 or child.color)
+            if child.price then
+                print("$" .. child.price, x, y + 7, have_it and 5 or (child.price > money and 8 or 0))
             end
             y += th + 5
         end
@@ -176,7 +224,7 @@ state_game.draw = function()
         clip()
         camera()
     elseif activity.name == "register" then
-        controls = {"pick", "back"}
+        controls = {"pick"}
         local o = 0
         if #activity.bills > 5 then o = 2 end        
         for i = 1, #activity.bills do
@@ -199,7 +247,7 @@ state_game.draw = function()
 
         rectfill(0, 80, 127, 127, 6)
         line(0, 80, 127, 80, 1)
-        rect(-1,87,43,119,5)
+        rect(-1,87,43,118,5)
         rectfill(43, 81, 127,123,5)
         rect(43, 81, 127,123,1)
         
@@ -207,7 +255,7 @@ state_game.draw = function()
             draw_cash(BILLS[i], 24 + i * 21, 85, activity.selected_bill == i)
         end
 
-        rectfill(0,88,42,118,7)
+        rectfill(0,88,42,117,7)
         print("sale", 10, 91, 1)
         local sale, given, change = activity.sale, "+" .. activity.given, activity.change
         print(sale, 43 - print(sale, 0, -100), 91, 1)
@@ -215,36 +263,52 @@ state_game.draw = function()
 
         rectfill(0, 107, 42, 115, 10)
         print("change", 2, 109, 1)
-        print(change, 43 - print(change, 0, -100), 109, 8)
+        local w = print(change, 0, -100)
+        if bump_change > 0 then
+            rectfill(42 - w, 108, 42, 114, 11)
+        end
+        print(change, 43 - w, 109, (bump_change > 0) and 7 or 8)
+        
     end
-    spr(44, 0, 3, false, false, 26)
-    spr(43, 26, 3)
-    spr(45, 2, 5)
-    print(money, 9, 6, 1)
+    bump_change = max(bump_change - 1, 0)
 
-    spr(44, 102, 3, false, false, 26)
-    spr(43, 100, 3, true)
-    spr(46, 120, 5)
-    print("4.9", 105, 6, 1)    
-
-    -- 12 hours = 4 minutes
-    local minutes = ((daytime \ 50) * 5) % 60
-    local hours = 7 + daytime \ 600
-    time_str = ((hours < 13) and hours or hours - 12) .. ":" .. ((minutes < 10) and "0" or "") .. minutes .. (hours < 12 and " am" or " pm")
-    center_print(time_str, 64, 6, 0)
     
+    local o = 3
     if controls[1] then
         spr(73, 3, 120)
-        local o = print(controls[1], 12, 121, 0)
-        if controls[2] then
-            spr(74, o + 8, 120)
-            print(controls[2], o + 17, 121, 0)        
-        end
+        o = print(controls[1], 12, 121, 0) + 8
     end
+    if controls[2] then
+        spr(74, o, 120)
+        print(controls[2], o + 9, 121, 0)        
+    end
+
     if #hints > 0 then
         local h = hints[1]
         local yo = up_down_t(h.time, 150, 7) * 8
         rectfill(0, 127 - yo, 127, 135 - yo, 10)
         center_print(h.text, 64, 129 - yo, 0)
     end
+
+    if description then
+        --center_print(description, 64, 111, 1, 7)
+        rectfill(0, 109, 127, 119, 6)
+        rectfill(0, 110, 127, 118, 7)
+        local w = print(description,0,-100)
+        if w > 125 then
+            local w2 = (w - 125) + 16
+            clip(0, 1, 127, 126)
+            local t = mid(w2 - abs((description_t\2) % (w2 * 2) - w2) - 8, 0, w - 125)
+            camera(t)
+        end
+        print(description, 1, 112, 1)
+        camera()
+        description_t += 1
+    end
+
+    if time < 0x0.0010 then
+        fillp(0b0.1 + (0b1000000000000000 >> (time \ 0x0.0001)))
+        rectfill(0,0,127,127,1)
+    end
+    fillp()
 end

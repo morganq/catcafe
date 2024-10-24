@@ -34,7 +34,7 @@ function make_player(x, y)
         self.x = mid(self.x, 5, cafe_size[1] * 12 - 4)
         self.y = mid(self.y, -4, cafe_size[2] * 12 - 7)
 
-        local pt = {self.dir[1] * 6 + self.x, self.dir[2] * 6 + self.y + 2}
+        local pt = {self.dir[1] * 6 + self.x, self.dir[2] * 6 + self.y + 3}
         selected_ent = nil
         for ent in all(ents) do
             if ent.moveable or ent.interactable then
@@ -50,7 +50,21 @@ function make_player(x, y)
                     break
                 end
             end
-        end              
+        end
+        if not selected_ent and btnp(B_CONFIRM) then
+            local nd, nc = 999, nil
+            for cat in all(cats) do
+                local dx, dy = self.x - cat.x, self.y - cat.y
+                local d = sqrt(dx * dx + dy * dy)
+                if d < nd then
+                    nc = cat
+                    nd = d
+                end
+            end
+            if nc then
+                nc:walk_to(self.x + rnd(8) - 4, self.y + rnd(8) - 4)
+            end
+        end
     end
     p.get_rect = function(self)
         return unpack(self:calculate_rect())
