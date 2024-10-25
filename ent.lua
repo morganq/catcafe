@@ -6,8 +6,9 @@ function make_ent(spri, x, y, depth_offset)
     e.has_top = meta[11] > 0
     e.top_height = e.has_top and (meta[11] * 2 + 1) or 0
     populate_table(e, "moveable=false,interactable=false,blocks_placement=true,collides=true,shaking=0,name=none,height=0,imm_offset=0")
-    e.debug_hitbox = false
+    e.debug_hitbox = true
     e.draw = function(self, invalid, fakex, fakey)
+        --[[
         if self.pal then pal(self.pal) end
         local s = self.spri
         if type(self.spri) == "table" then
@@ -48,8 +49,10 @@ function make_ent(spri, x, y, depth_offset)
         end
         if self.debug_hitbox then
             local x1, x2, y1, y2 = self:get_rect()
-            rectfill(x1, y1, x2, y2, rnd(15)\1)
+            rect(x1, y1 - self.height, x2, y2 - self.height, 8)
+            rect(x1, y1 - self.top_height - self.height, x2, y2 - self.top_height - self.height, 12)
         end        
+        ]]
     end
     e.update = function(self)
         self.imm_offset = 0
@@ -96,6 +99,7 @@ function make_ent(spri, x, y, depth_offset)
 end
 
 function draw_ents()
+    --[[
     local layers = {}
     local MINL, MAXL = 1, 160
     for ent in all(ents) do
@@ -109,6 +113,34 @@ function draw_ents()
     for layer = MINL, MAXL do
         for ent in all(layers[layer]) do
             ent:draw()
+        end
+    end]]
+
+    local S_LOW, S_HIGH = 0, 32
+
+    function get_slices(ent)
+        local slices = {}
+        local sx, sy, sw, sh, ox, oy, cx, cy, cw, ch = unpack(ent.meta)
+        --ox, oy, cx, cy, cw, ch, top = ox or 0, oy or 0, cx or 0, cy or 0, cw or sw, ch or ent.meta[10], ent.top_height
+        local top = ent.top_height
+        for i = ent.height, ent.height + top do
+            slices[i] = {sx, sy + sh - ch - i, sw, ch, ent.x - sw / 2, ent.y - ch / 2 - i - oy}
+        end
+        return slices
+    end
+
+    local slices = {}
+    for ent in all(ents) do
+        for s, rect in pairs(get_slices(ent)) do
+            if not slices[s] then slices[s] = {} end
+            add(slices[s], rect)
+        end
+    end
+    for s = S_LOW, S_HIGH do
+        for rect in all(slices[s]) do
+            
+            --rectfill(rect[5], rect[6], rect[5] + rect[3], rect[6] + rect[4], s)
+            sspr(unpack(rect))
         end
     end
 end

@@ -23,7 +23,7 @@ function spr(n, x, y, fx, fy, dw, dh)
 end
 function sprc(n, x, y, fx, fy, dw, dh)
     local m = SPRITE_META[ n ]
-    sspr(m[1], m[2], m[3], m[4], x - m[3] / 2 + m[5], y - m[4] / 2 - m[6], dw or m[3], dh or m[4], fx, fy)    
+    sspr(m[1], m[2], m[3], m[4], x - m[3] / 2 - m[5], y - m[4] / 2 - m[6], dw or m[3], dh or m[4], fx, fy)    
 end
 
 function outline_sprc(c, n, x, y, fx, fy, dw, dh, p)

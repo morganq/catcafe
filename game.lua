@@ -185,7 +185,7 @@ state_game.start = function()
 
     player = make_player(31, 8)
 
-    money = 50
+    money = 550
     stars = 0
     selected_ent = nil
 
