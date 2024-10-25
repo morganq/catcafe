@@ -1,10 +1,12 @@
 function make_ent(spri, x, y, depth_offset)
-    local meta = SPRITE_META[spri]
-    if not meta then meta = SPRITE_META[spri[1]] end
+    if type(spri) == "number" then spri = {spri,spri,spri} end
+    local meta = SPRITE_META[spri[1]]
     local e = {spri=spri, x=x + meta[3] \ 2, y=y + meta[4] \ 2, depth_offset=depth_offset or 0, meta=meta, hflip = false}
     e.dir = {0,1}
-    e.has_top = meta[11] > 0
-    e.top_height = e.has_top and (meta[11] * 2 + 1) or 0
+    --e.has_top = meta[11] > 0
+    --e.top_height = e.has_top and (meta[11] * 2 + 1) or 0
+    
+    e.top_height = meta[4] - meta[10]
     populate_table(e, "moveable=false,interactable=false,blocks_placement=true,collides=true,shaking=0,name=none,height=0,imm_offset=0")
     e.debug_hitbox = true
     e.draw = function(self, invalid, fakex, fakey)
@@ -58,8 +60,9 @@ function make_ent(spri, x, y, depth_offset)
         self.imm_offset = 0
     end
     e.set_sprite = function(self, i)
+        if type(i) == "number" then i = {i,i,i} end
         self.spri = i
-        self.meta = SPRITE_META[i]
+        self.meta = SPRITE_META[i[1]]
     end
     e.get_rect = function(self)
         return unpack(self.rect)
@@ -74,7 +77,7 @@ function make_ent(spri, x, y, depth_offset)
     e.calculate_rect = function(self)
         local x1 = self.x + self.meta[7] - self.meta[5] - self.meta[3] / 2
         --local y1 = self.y + self.meta[8] - self.meta[6] - self.meta[4] / 2
-        local y1 = self.y + self.meta[8] - self.meta[4] / 2
+        local y1 = self.y + self.meta[8] / 2 - self.meta[6] - self.meta[4] / 2 - 0.5
         self.rect = {
             x1,
             x1 + self.meta[9],
@@ -119,12 +122,42 @@ function draw_ents()
     local S_LOW, S_HIGH = 0, 32
 
     function get_slices(ent)
+        local s = ent.spri[1]
+        local hflip = false
+        if ent.dir[1] == 0 then
+            if ent.dir[2] < 0 then
+                s = ent.spri[3]
+            end
+        else
+            s = ent.spri[2]
+            if ent.dir[1] < 0 then
+                hflip = true
+            end
+        end
         local slices = {}
-        local sx, sy, sw, sh, ox, oy, cx, cy, cw, ch = unpack(ent.meta)
+        local sx, sy, sw, sh, ox, oy, cx, cy, cw, ch = unpack(SPRITE_META[s])
         --ox, oy, cx, cy, cw, ch, top = ox or 0, oy or 0, cx or 0, cy or 0, cw or sw, ch or ent.meta[10], ent.top_height
-        local top = ent.top_height
-        for i = ent.height, ent.height + top do
-            slices[i] = {sx, sy + sh - ch - i, sw, ch, ent.x - sw / 2, ent.y - ch / 2 - i - oy}
+        local top = ent.top_height--sh - ch
+        local ts = ent.height\1 + top
+        local h = 0
+        local eh = ent.height \ 1
+        for i = sh, ch, -1 do
+            if i == ch then
+                slices[h + eh] = {{
+                    sx, sy, sw, ch,
+                    ent.x - sw / 2, ent.y - sh - oy + ch / 2 - eh,
+                    sw, ch,
+                    hflip
+                }, ent.pal}
+            else
+                slices[h + eh] = {{
+                    sx, sy + i - 1, sw, 1,
+                    ent.x - sw / 2, ent.y - h - 1 + ch / 2 - eh,
+                    sw, 1,
+                    hflip
+                }, ent.pal}
+            end
+            h += 1
         end
         return slices
     end
@@ -137,12 +170,24 @@ function draw_ents()
         end
     end
     for s = S_LOW, S_HIGH do
-        for rect in all(slices[s]) do
-            
-            --rectfill(rect[5], rect[6], rect[5] + rect[3], rect[6] + rect[4], s)
-            sspr(unpack(rect))
+        for slice in all(slices[s]) do
+            r, cpal = unpack(slice)
+            --if time % 0x0.0020 > 0x0.001 then
+            --    rectfill(rect[5], rect[6], rect[5] + rect[3] - 1, rect[6] + rect[4] - 1, s)
+            --else
+            pal(cpal)
+                sspr(unpack(r))
+            --end
         end
+        pal()
     end
+    --[[
+    for ent in all(ents) do
+        pset(ent.x, ent.y, 8)
+        local x1, x2, y1, y2 = ent:get_rect()
+        rect(x1, y1, x2, y2, 12)
+    end
+    ]]
 end
 
 function make_blocker(x, y, w, h)
@@ -184,7 +229,7 @@ function make_counter(spri3, x, y)
     populate_table(e, "is_counter=true")
     local x1, x2, y1, y2 = e:get_rect()
     
-    e.counter_center = {(x2 + x1) / 2 + 0.5, (y2 + y1) / 2}
+    e.counter_center = {(x2 + x1) / 2 + 0.5, (y1 + y2) / 2 - 0.5}
     e.counter_height = e.top_height
     return e
 end

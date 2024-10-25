@@ -7,7 +7,7 @@ while i < #SPRITE_META_STR do
         return value
     end    
     local len = next()
-    printh(len)
+    --printh(len)
     local meta = split"0,0,0,0,0,0,0,0,0,0,0"
     for j = 1, len do
         meta[j] = next()

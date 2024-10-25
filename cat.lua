@@ -143,7 +143,7 @@ function make_cat(index, x, y)
                     if ent != self and ent.collides then
                         local c = collide_ents(self, ent)
                         if c[1] != 0 or c[2] != 0 then
-                            if not ent.has_top then
+                            if false then
                                 if self.state_timer > 30 and rnd() < 0.5 then
                                     self:set_state("sitting")
                                 else

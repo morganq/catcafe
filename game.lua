@@ -164,11 +164,12 @@ state_game.start = function()
     make_counter(75, 48, 45)
 
     drip = make_counter_item("drip machine",84, 2, 34, 1)
-    drip.height = 3
+    drip.height = rc1.counter_height
     rc1.counter_item = drip 
+    drip:move(unpack(rc1.counter_center))
 
     register = make_counter_item("register",53, 27, 34, 1)
-    register.height = 3
+    register.height = rc2.counter_height
     register.interactable = true
     register.interact = function(self)
         if #customer_queue > 0 then
@@ -177,11 +178,12 @@ state_game.start = function()
         end
     end
     rc2.counter_item = register
+    register:move(unpack(rc2.counter_center))
 
 
     day_num = 1
     door = make_ent(35, 26, -13)
-    blocker = make_blocker(door.x - 10, door.y + 4, 10, register.y - door.y - 6)
+    --blocker = make_blocker(door.x - 10, door.y + 4, 10, register.y - door.y - 6)
 
     player = make_player(31, 8)
 
