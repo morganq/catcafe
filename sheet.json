@@ -52,7 +52,7 @@
    { "name": "Slice 26", "color": "#0000ffff", "data": "x", "keys": [{ "frame": 0, "bounds": {"x": 72, "y": 8, "w": 8, "h": 5 } }, { "frame": 1, "bounds": {"x": 72, "y": 8, "w": 8, "h": 5 } }] },
    { "name": "Slice 27", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 24, "y": 13, "w": 7, "h": 14 } }] },
    { "name": "Slice 28", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 31, "y": 13, "w": 7, "h": 15 } }] },
-   { "name": "Slice 29", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 38, "y": 13, "w": 7, "h": 9 }, "pivot": {"x": 0, "y": -3 } }] },
+   { "name": "Slice 29", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 38, "y": 13, "w": 7, "h": 9 } }] },
    { "name": "Slice 30", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 45, "y": 13, "w": 13, "h": 22 } }] },
    { "name": "Slice 31", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 0, "y": 16, "w": 13, "h": 13 } }] },
    { "name": "Slice 32", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 13, "y": 16, "w": 9, "h": 11 } }] },
@@ -75,7 +75,7 @@
    { "name": "Slice 50", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 43, "y": 36, "w": 13, "h": 13 } }] },
    { "name": "Slice 51", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 0, "y": 45, "w": 10, "h": 15 } }] },
    { "name": "Slice 52", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 10, "y": 47, "w": 12, "h": 14 }, "pivot": {"x": 0, "y": 0 } }, { "frame": 1, "bounds": {"x": 10, "y": 47, "w": 10, "h": 14 }, "pivot": {"x": 0, "y": 3 } }] },
-   { "name": "Slice 53", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 22, "y": 49, "w": 9, "h": 12 }, "pivot": {"x": 0, "y": 0 } }, { "frame": 1, "bounds": {"x": 22, "y": 49, "w": 9, "h": 12 }, "pivot": {"x": 0, "y": 2 } }] },
+   { "name": "Slice 53", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 22, "y": 49, "w": 9, "h": 12 }, "pivot": {"x": 0, "y": -1 } }, { "frame": 1, "bounds": {"x": 22, "y": 49, "w": 9, "h": 12 }, "pivot": {"x": 0, "y": 2 } }] },
    { "name": "Slice 54", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 108, "y": 123, "w": 5, "h": 5 } }] },
    { "name": "Slice 55", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 85, "y": 123, "w": 4, "h": 5 } }] },
    { "name": "Slice 56", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 89, "y": 123, "w": 4, "h": 5 } }] },
@@ -85,13 +85,13 @@
    { "name": "Slice 60", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 98, "y": 118, "w": 5, "h": 5 } }] },
    { "name": "Slice 61", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 31, "y": 49, "w": 11, "h": 13 } }] },
    { "name": "Slice 41", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 91, "y": 8, "w": 14, "h": 14 }, "pivot": {"x": 0, "y": 0 } }, { "frame": 1, "bounds": {"x": 91, "y": 8, "w": 14, "h": 14 }, "pivot": {"x": 0, "y": 0 } }] },
-   { "name": "Slice 62", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 117, "y": 8, "w": 11, "h": 13 } }] },
+   { "name": "Slice 62", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 117, "y": 8, "w": 11, "h": 13 } }, { "frame": 1, "bounds": {"x": 117, "y": 8, "w": 11, "h": 13 } }] },
    { "name": "Slice 63", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 75, "y": 118, "w": 10, "h": 10 } }] },
    { "name": "Slice 64", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 70, "y": 125, "w": 5, "h": 3 } }] },
    { "name": "Slice 65", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 65, "y": 125, "w": 5, "h": 3 } }] },
    { "name": "Slice 66", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 60, "y": 121, "w": 5, "h": 7 } }] },
    { "name": "Slice 67", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 55, "y": 121, "w": 5, "h": 7 } }] },
-   { "name": "Slice 68", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 117, "y": 21, "w": 11, "h": 13 } }] },
+   { "name": "Slice 68", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 117, "y": 21, "w": 11, "h": 13 } }, { "frame": 1, "bounds": {"x": 117, "y": 21, "w": 11, "h": 13 } }] },
    { "name": "Slice 69", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 52, "y": 121, "w": 3, "h": 7 } }] },
    { "name": "Slice 70", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 43, "y": 125, "w": 9, "h": 3 } }] },
    { "name": "Slice 71", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 38, "y": 125, "w": 5, "h": 3 } }] },
@@ -120,7 +120,8 @@
    { "name": "Slice 94", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 68, "y": 104, "w": 10, "h": 13 } }] },
    { "name": "Slice 95", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 58, "y": 104, "w": 10, "h": 13 } }] },
    { "name": "Slice 96", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 48, "y": 104, "w": 10, "h": 13 } }] },
-   { "name": "Slice 97", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 25, "y": 62, "w": 8, "h": 7 }, "pivot": {"x": 0, "y": 0 } }, { "frame": 1, "bounds": {"x": 25, "y": 62, "w": 8, "h": 7 }, "pivot": {"x": 0, "y": 2 } }] }
+   { "name": "Slice 97", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 25, "y": 62, "w": 8, "h": 7 }, "pivot": {"x": 0, "y": 0 } }, { "frame": 1, "bounds": {"x": 25, "y": 62, "w": 8, "h": 7 }, "pivot": {"x": 0, "y": 2 } }] },
+   { "name": "Slice 98", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 72, "y": 22, "w": 10, "h": 16 } }] }
   ]
  }
 }

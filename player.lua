@@ -32,9 +32,9 @@ function make_player(x, y)
             end
         end
         self.x = mid(self.x, 5, cafe_size[1] * 12 - 4)
-        self.y = mid(self.y, -4, cafe_size[2] * 12 - 7)
+        self.y = mid(self.y, 1, cafe_size[2] * 12 - 1)
 
-        local pt = {self.dir[1] * 6 + self.x, self.dir[2] * 6 + self.y + 3}
+        local pt = {self.dir[1] * 6 + self.x, self.dir[2] * 6 + self.y}
         selected_ent = nil
         for ent in all(ents) do
             if ent.moveable or ent.interactable then

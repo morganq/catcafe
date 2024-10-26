@@ -40,19 +40,6 @@ state_game.draw = function()
     spr(38, 49, -12)
     spr(39, 57, -11)
 
-
-
-    draw_ents()
-
-    if selected_ent then
-        controls = {"select"}
-        if selected_ent.interactable then controls = {selected_ent.interact_text or "use"} end
-    end
-
-    if activity.name == "play" then
-        controls[2] = "phone"
-    end
-
     if activity.name == "moving" then
         if activity.counter_only then
             local counters = get_counters()
@@ -63,6 +50,7 @@ state_game.draw = function()
             end
         else
             controls = {"place", "rotate"}
+            --[[
             fillp(0b0101111101011111.1)
             local x1, x2, y1, y2 = activity.ent:get_rect()
             local ax1, ay1, ax2, ay2 = max(x1 - 8, 0), max(y1 - 8, 0), min(x2 + 8, cspx), min(y2 + 8, cspy)
@@ -80,14 +68,22 @@ state_game.draw = function()
             end
             clip()
             fillp()
+            ]]
         end
     end
 
-    if activity.name == "moving" then
-        if activity.ent then
-            activity.ent:draw(not activity.drop_valid)
-        end
+    draw_ents()
+
+    if selected_ent then
+        controls = {"select"}
+        if selected_ent.interactable then controls = {selected_ent.interact_text or "use"} end
     end
+
+    if activity.name == "play" then
+        controls[2] = "phone"
+    end
+
+
 
     -- UI camera
     camera()

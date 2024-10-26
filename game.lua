@@ -7,6 +7,17 @@ Goal: Get to 9x7
 --[[ Feedback
 
  - need cheap stuff to decorate
+   - plants
+   - token space for rugs?
+   - hanging light???
+   - couch (sectional?)
+   - shelving with cute stuff
+   - window seating
+   - bar/counter seating?
+   - place for cream etc
+   - elevated area with stairs
+   - long table
+
  - didn't know how stars were acquired via cats
   * gain star at the moment they interact with the cat
  - need clear goal
@@ -153,15 +164,16 @@ state_game.start = function()
     
     description_t = 0
 
-    make_floor_item("table",36, 48, 12)
-    make_floor_item("chair",{27,28,29}, 52, 2)
+    make_floor_item("table",{36,98,36}, 51, 16)
+    make_floor_item("chair",{27,28,29}, 52, 6)
+    make_floor_item("bookcase",{30,30,30}, 12, 6)
     -- opt: string setup
-    local rc1 = make_counter(47, 0, 35)
-    flap = make_ent(48, 12, 35)
-    local rc2 = make_counter(49, 25, 35)
-    make_counter(50, 36, 35)
-    make_counter(51, 48, 35)
-    make_counter(75, 48, 45)
+    local rc1 = make_counter(47, 6, 44)
+    --flap = make_ent(48, 18, 44)
+    local rc2 = make_counter(49, 30, 44)
+    make_counter(50, 43, 44)
+    make_counter(51, 54, 45)
+    make_counter(75, 54, 55)
 
     drip = make_counter_item("drip machine",84, 2, 34, 1)
     drip.height = rc1.counter_height
@@ -182,7 +194,7 @@ state_game.start = function()
 
 
     day_num = 1
-    door = make_ent(35, 26, -13)
+    door = make_ent(35, 31, -5)
     --blocker = make_blocker(door.x - 10, door.y + 4, 10, register.y - door.y - 6)
 
     player = make_player(31, 8)
@@ -284,7 +296,7 @@ state_game.update = function()
     end
 
     if daytime > 10 then
-        end_day()
+        --end_day()
     end
 
     if cafe_open and activity.name != "phone" then
