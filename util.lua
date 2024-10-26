@@ -16,35 +16,20 @@ while i < #SPRITE_META_STR do
     add(SPRITE_META, meta)
 end
 
-p8_spr = spr
-function spr(n, x, y, fx, fy, dw, dh)
+function zspr(n, x, y, fx, fy, dw, dh)
     local m = SPRITE_META[ n ]
-    sspr(m[1], m[2], m[3], m[4], x + m[5], y - m[6], dw or m[3], dh or m[4], fx, fy)
-end
-function sprc(n, x, y, fx, fy, dw, dh)
-    local m = SPRITE_META[ n ]
-    sspr(m[1], m[2], m[3], m[4], x - m[3] / 2 - m[5], y - m[4] / 2 - m[6], dw or m[3], dh or m[4], fx, fy)    
-end
-
-function outline_sprc(c, n, x, y, fx, fy, dw, dh, p)
-    pal({c,c,c,c,c,c,c,c,c,c,c,c,c,c,c})
-    local off = {{-1,0},{1,0},{0,-1},{0,1}}
-    for i = 1, 4 do
-        sprc(n, x + off[i][1], y + off[i][2], fx, fy, dw, dh)
-    end
-    pal(p)
-    sprc(n, x, y, fx, fy, dw, dh)
-    pal()
+    sspr(m[1], m[2], m[3], m[4], x + m[5], y - m[6], dw or m[3], dh or m[4], fx == true or fx == 1, fy == true or fy == 1)
 end
 
 function draw_paw(x, y, angle, size, color1, color2)
+    --[[
     circfill(x + cos(angle) * size * 0.1, y + sin(angle) * size * 0.1, size*1.1, color1)
     for i = -2, 1 do
         local ta = angle + i * 0.125 + 0.0625
         local cx, cy = cos(ta) * size + x, sin(ta) * size + y
         circfill(cx, cy, size * 0.5, color1)
-        
     end
+    ]]
     for i = -2, 1 do
         local ta = angle + i * 0.125 + 0.0625
         local cx, cy = cos(ta) * size + x, sin(ta) * size + y
@@ -63,7 +48,6 @@ function center_print(s, x, y, color, bgcolor, outlinecolor, rounded)
 		local w = print(s,0,-600) 
 		local xo = (w - 0.5) \ 2
 		if bgcolor then
-            
 			rectfill(x - xo - 1, y - 1, x + xo + 1, y + 5, bgcolor)
             if rounded then
                 rectfill(x - xo - 2, y, x + xo + 2, y + 4, bgcolor)
@@ -85,9 +69,9 @@ function draw_cash(num, x, y, selected)
     if selected then
         rect(x-1, y-1, x + 18, y + 37, 10)
     end
-    spr(63, x + 4, y + 13)
-    spr(s, x + 2, y + 35 - SPRITE_META[s][4])
-    spr(s, x + 11, y + 2)
+    zspr(63, x + 4, y + 13)
+    zspr(s, x + 2, y + 35 - SPRITE_META[s][4])
+    zspr(s, x + 11, y + 2)
 end
 
 function contains(lst, ele)
@@ -114,6 +98,16 @@ function string_table(s)
     return z
 end
 
+function string_multitable(s)
+    local mt = {}
+    for line in all(split(s,"\n")) do
+        if #line > 3 then
+            add(mt, string_table(line))
+        end
+    end
+    return mt
+end
+
 function up_down_t(x, total, cap)
 	local ma = cap - mid(abs(x - total/2) - (total / 2 - cap), 0, cap)
 	return ma / cap
@@ -121,4 +115,15 @@ end
 
 function cos_ease(x)
 	return cos(x / 2) * -0.5 + 0.5 
+end
+
+function sfn(s)
+    for line in all(split(s, "\n")) do
+        if #line > 3 then
+            local vars = split(line)
+            local fnn = vars[1]
+            deli(vars, 1)
+            _ENV[fnn](unpack(vars))
+        end
+    end
 end

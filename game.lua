@@ -2,6 +2,9 @@
 
 Goal: Get to 9x7
 
+
+-- 7644
+
 ]]
 
 --[[ Feedback
@@ -39,7 +42,33 @@ Goal: Get to 9x7
 
 ]]
 
+OBJECT_SPRITES = string_multitable([[
+customer=62/62/68/0/0/0
+chair=27/27/27/0/0/0|29/28/99/0/0/5
+bookshelf=30/30/30/0/0/0
+table=36/98/36/0/0/0
+register=53/53/53/0/0/0
+drip machine=84/84/84/0/0/0
+grinder=86/86/86/0/0/0
+espresso=97/97/97/0/0/0
+frother=52/52/52/0/0/0
+pastries=85/85/85/0/0/0
+]])
+
+for os in all(OBJECT_SPRITES) do
+    for k,v in pairs(os) do
+        local t = {}
+        local parts = split(v, "|")
+        for part in all(parts) do
+            add(t, make_spritepart(unpack(split(part,"/"))))
+        end
+        OBJECT_SPRITES[k] = t
+    end
+end
+
 BILLS = {1, 5, 10, 20}
+
+function action_buy_grinder() prices["drip coffee"] = 3 end
 
 function play_activity() return {name = "play"} end
 function moving_activity(ent, counter) return {name = "moving", ent = ent, drop_valid=true, counter_only=counter, selected_counter = 1} end
@@ -61,28 +90,27 @@ function phone_activity()
     end
     return {name = "phone", tree = {scroll_page = 8, children = {
             {img = 55, title = "info", scroll_page = 8, children = {}},
-            {img = 56, title = "furniture", scroll_page = 4, children = {
-                {img = 27, title = "chair", type = "buy_floor", sprite={27,28,29}, price = 20, description="always good to have more seating"},
-                {img = 36, title = "table", type = "buy_floor", price = 40, stat = "appeal", stat_value = "0.5", description="customers usually expect tables"},
-                {img = 30, title = "bookshelf", type = "buy_floor", price = 60, stat = "max_cats", stat_value = "0.25", description="cats might like to climb it"},
-            }},
-            {img = 57, title = "appliances", scroll_page = 4, children = {
-                {img = 53, title = "register", type = "buy_counter", price = 100},
-                {img = 84, title = "drip machine", type = "buy_counter", price = 50},
-                {img = 86, title = "grinder", type = "buy_counter", price = 50, fn = function() prices["drip coffee"] = 3 end, description = "raises drip coffee price +$1"},
-                {img = 97, title = "pstry case", type = "buy_counter", price = 50, menu = {"sweet pastry", "savory pastry"}, description = "adds pastries to the menu"},
-                {img = 52, title = "espresso", type = "buy_counter", price = 500, stat = "appeal", stat_value = "0.5", menu = {"espresso"}, description = "adds espresso to the menu"},
-                {img = 85, title = "frother", type = "buy_counter", price = 150, stat = "appeal", stat_value = "1.0", menu = {"cappuccino", "latte"}, requires="espresso", description = "adds espresso milk drinks to the menu"},
-                
-            }},        
+            {img = 56, title = "furniture", scroll_page = 4, children = string_multitable([[
+img=27,title=chair,type=buy_floor,sprite=chair,price=20,description=always good to have more seating
+img=36,title=table,type=buy_floor,sprite=table,price=40,stat=appeal,stat_value=0.5,description=customers usually expect tables
+img=30,title=bookshelf,type=buy_floor,sprite=bookshelf,price=60,stat=max_cats,stat_value=0.25,description=cats might like to climb it
+]])},
+            {img = 57, title = "appliances", scroll_page = 4, children = string_multitable([[
+img=53,title=register,type=buy_counter,price=100,sprite=register
+img=84,title=drip machine,type=buy_counter,price=50,sprite=drip machine
+img=86,title=grinder,type=buy_counter,price=50,sprite=grinder,fn=action_buy_grinder,description=raises drip coffee price +$1
+img=97,title=pastries,type=buy_counter,price=50,sprite=pastries,menu=sweet pastry/savory pastry,description=adds pastries to the menu
+img=52,title=espresso,type=buy_counter,price=500,sprite=espresso,stat=appeal,stat_value=0.5,menu=espresso,description=adds espresso to the menu
+img=85,title=frother,type=buy_counter,price=150,sprite=frother,stat=appeal,stat_value=1.0,menu=cappuccino/latte,requires=espresso,description=adds espresso milk drinks to the menu
+]])},
             --{img = 58, title = "restock", scroll_page = 8, children = {}},
-            {img = 60, title = "floorplan", scroll_page = 4, children = {
-                {img = 58, title = "6x6 cafe", price = 200, type="floorplan", plan={6,6}},
-                {img = 58, title = "7x6 cafe", price = 600, type="floorplan", plan={7,6}},
-                {img = 58, title = "7x7 cafe", price = 1100, type="floorplan", plan={7,7}},
-                {img = 58, title = "8x7 cafe", price = 2000, type="floorplan", plan={8,7}},
-                {img = 58, title = "9x7 cafe", price = 5000, type="floorplan", plan={9,7}},
-            }},
+            {img = 60, title = "floorplan", scroll_page = 4, children = string_multitable([[
+img=58,title=6x6 cafe,price=200,type=floorplan,planx=6,plany=6
+img=58,title=7x6 cafe,price=600,type=floorplan,planx=7,plany=6
+img=58,title=7x7 cafe,price=1100,type=floorplan,planx=7,plany=7
+img=58,title=8x7 cafe,price=2000,type=floorplan,planx=8,plany=7
+img=58,title=9x7 cafe,price=5000,type=floorplan,planx=9,plany=7
+            ]])},
             {img = 59, title = "adopt!", scroll_page = 4, children = cats_menu},
         }
     }, cursor = {1}}
@@ -164,9 +192,9 @@ state_game.start = function()
     
     description_t = 0
 
-    make_floor_item("table",{36,98,36}, 51, 16)
-    make_floor_item("chair",{27,28,29}, 52, 6)
-    make_floor_item("bookcase",{30,30,30}, 12, 6)
+    make_floor_item("table",OBJECT_SPRITES["table"], 51, 16)
+    make_floor_item("chair",OBJECT_SPRITES["chair"], 52, 6)
+    make_floor_item("bookcase",30, 12, 6)
     -- opt: string setup
     local rc1 = make_counter(47, 6, 44)
     --flap = make_ent(48, 18, 44)
@@ -334,7 +362,6 @@ state_game.update = function()
         if activity.counter_only then
             local counters = get_counters()
             activity.selected_counter = mid(activity.selected_counter + dx + dy, 1, #counters)
-            printh(activity.selected_counter)
             local c = counters[activity.selected_counter]
             e:move( c.counter_center[1], c.counter_center[2] )
             e.height = c.counter_height
@@ -389,25 +416,25 @@ state_game.update = function()
             elseif item.type == "floorplan" then
                 if item.price <= money then
                     money -= item.price
-                    local dx, dy = item.plan[1] - cafe_size[1], item.plan[2] - cafe_size[2]
+                    local dx, dy = item.planx - cafe_size[1], item.plany - cafe_size[2]
                     for c in all(get_counters()) do
                         c:move(c.x, c.y + dy * 12)
                         if c.counter_item then
                             c.counter_item:move(c.counter_item.x, c.counter_item.y + dy * 12)
                         end
                     end
-                    flap:move(flap.x, flap.y + dy * 12)
-                    blocker.y += dy * 12
+                    --flap:move(flap.x, flap.y + dy * 12)
+                    --blocker.y += dy * 12
 
                     activity = play_activity()
-                    cafe_size = item.plan
+                    cafe_size = {item.planx, item.plany}
                 else
                     hint("not enough money")
                 end                
             elseif item.type == "buy_floor" then
                 if item.price <= money then
                     money -= item.price
-                    local e = make_floor_item(item.title, item.sprite or item.img, 25, 0)
+                    local e = make_floor_item(item.title, OBJECT_SPRITES[item.sprite], 25, 0)
                     if item.stat then
                         stats[item.stat] += item.stat_value
                     end
@@ -425,9 +452,9 @@ state_game.update = function()
                 else
                     if item.price <= money then
                         money -= item.price
-                        local e = make_counter_item(item.title, item.sprite or item.img, 25, 0)
-                        e.menu = item.menu
-                        if item.fn then item.fn() end
+                        local e = make_counter_item(item.title, OBJECT_SPRITES[item.sprite], 25, 0)
+                        e.menu = split(item.menu,"/")
+                        if item.fn then _ENV[item.fn]() end
                         activity = moving_activity(e, true)
                     else
                         hint("not enough money")

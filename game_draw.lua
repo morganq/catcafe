@@ -17,6 +17,7 @@ state_game.draw = function()
     local cspx, cspy = csx * 12, csy * 12
     local cx, cy = (cspx - 128) \ 2, (cspy - 128) \ 2 - 8
     camera(cx, cy)
+    camx, camy = cx,cy
 
     rect(-1, -17, cspx + 1, cspy + 1, 2)
     rect(-2, -18, cspx + 2, cspy + 2, 4)
@@ -24,21 +25,25 @@ state_game.draw = function()
 
     for fx = 0, cafe_size[1] - 1 do
         for fy = 0, cafe_size[2] - 1 do
-            spr(31, fx * 12, fy * 12)
+            zspr(31, fx * 12, fy * 12)
         end
-        spr(34, fx * 12, -16)
+        zspr(34, fx * 12, -16)
     end
-    spr(33, -1, -16)
-    spr(33, cspx - 1, -16)
+sfn([[
+zspr,33,-1,-16
+zspr,32,5,-14
+zspr,32,13,-14
+zspr,32,39,-14
+zspr,32,47,-14
+zspr,32,55,-14
+zspr,37,41,-10
+zspr,38,49,-12
+zspr,39,57,-11
+]])    
+    
+    zspr(33, cspx - 1, -16)
 
-    spr(32, 5, -14)
-    spr(32, 13, -14)
-    spr(32, 39, -14)
-    spr(32, 47, -14)
-    spr(32, 55, -14)
-    spr(37, 41, -10)
-    spr(38, 49, -12)
-    spr(39, 57, -11)
+    draw_ents()
 
     if activity.name == "moving" then
         if activity.counter_only then
@@ -72,10 +77,8 @@ state_game.draw = function()
         end
     end
 
-    draw_ents()
-
     if selected_ent then
-        controls = {"select"}
+        controls = {"move"}
         if selected_ent.interactable then controls = {selected_ent.interact_text or "use"} end
     end
 
@@ -83,21 +86,19 @@ state_game.draw = function()
         controls[2] = "phone"
     end
 
-
-
     -- UI camera
     camera()
     local w = print(money,0,-100)
-    spr(44, 0, 3, false, false, w + 10)
-    spr(43, w + 10, 3)
-    spr(45, 2, 5)
+    zspr(44, 0, 3, false, false, w + 10)
+    zspr(43, w + 10, 3)
+    zspr(45, 2, 5)
     print(money, 9, 6 - bump_money \ 4, 1)
     bump_money = max(bump_money - 1, 0)
 
     w = print(stars,0,-100)
-    spr(44, 117 - w, 3, false, false, w + 11)
-    spr(43, 115 - w, 3, true)
-    spr(46, 120, 5)
+    zspr(44, 117 - w, 3, false, false, w + 11)
+    zspr(43, 115 - w, 3, true)
+    zspr(46, 120, 5)
     print(stars, 119 - w, 6 - bump_stars \ 4, 1)
     bump_stars = max(bump_stars - 1, 0)
     for p in all(particle_stars) do
@@ -105,7 +106,7 @@ state_game.draw = function()
         t = t ^ 3
         local px, py = (p.x - cx) * (1-t) + 120 * t, (p.y - cy) * (1-t) + 5 * t
         --print("\f9⁶:083e1c0814000000", px, py)
-        spr(46, px, py)
+        zspr(46, px, py)
         if t >= 1 then
             stars += 1
             del(particle_stars, p)
@@ -127,19 +128,19 @@ state_game.draw = function()
 
     if activity.name == "phone" then
         controls = {"select", "back"}
-        rectfill(41,4,88,103, 1)
-        rectfill(36,9,93,98, 1)
-
-        -- todo: screen lights up and loads
-        rectfill(38,6,91,101, 7)
-        spr(54, 36, 4)
-        spr(54, 89, 4, true)
-        spr(54, 36, 99, false, true)
-        spr(54, 89, 99, true, true)
-
         local tree, selected = get_phone_state()
-        camera(-38, -8)
-        clip(38, 8, 54, 92)
+        -- todo: screen lights up and loads
+        sfn([[
+rectfill,41,4,88,103,1
+rectfill,36,9,93,98,1
+rectfill,38,6,91,101,7
+zspr,54,36,4
+zspr,54,89,4,1
+zspr,54,36,99,,1
+zspr,54,89,99,1,1
+camera,-38,-8
+clip,38,8,54,92
+]])
         local y = 3
         local children = tree.children
         if tree.title then
@@ -210,10 +211,10 @@ state_game.draw = function()
         end
         if #children > tree.scroll_page then
             if page > 1 then
-                spr(71, 24, 7)
+                zspr(71, 24, 7)
             end
             if page < last_page then
-                spr(71, 24, 81,false,true)
+                zspr(71, 24, 81,false,true)
             end
             center_print(page .. "/" .. last_page, 26, 87, 0)
         end
@@ -232,7 +233,7 @@ state_game.draw = function()
         rect(1, ty, 61, 80, 6)
         rectfill(2, ty, 60, 80, 7)
         for i = 0, 6 do
-            spr(70, 1 + 9 * i, ty - 3)
+            zspr(70, 1 + 9 * i, ty - 3)
         end
         y = 72
         for item in all(order) do
@@ -241,24 +242,24 @@ state_game.draw = function()
             y -= 7
         end
 
-        rectfill(0, 80, 127, 127, 6)
-        line(0, 80, 127, 80, 1)
-        rect(-1,87,43,118,5)
-        rectfill(43, 81, 127,123,5)
-        rect(43, 81, 127,123,1)
-        
+        sfn([[
+rectfill,0,80,127,127,6
+line,0,80,127,80,1
+rect,-1,87,43,118,5
+rectfill,43,81,127,123,5
+rect,43,81,127,123,1
+rectfill,0,88,42,117,7
+rectfill,0,107,42,115,10
+print,sale,10,91,1
+print,change,2,109,1
+]])     
         for i = 1, 4 do
             draw_cash(BILLS[i], 24 + i * 21, 85, activity.selected_bill == i)
         end
-
-        rectfill(0,88,42,117,7)
-        print("sale", 10, 91, 1)
         local sale, given, change = activity.sale, "+" .. activity.given, activity.change
         print(sale, 43 - print(sale, 0, -100), 91, 1)
         print(given, 43 - print(given, 0, -100), 99, 3)
 
-        rectfill(0, 107, 42, 115, 10)
-        print("change", 2, 109, 1)
         local w = print(change, 0, -100)
         if bump_change > 0 then
             rectfill(42 - w, 108, 42, 114, 11)
@@ -271,11 +272,11 @@ state_game.draw = function()
     
     local o = 3
     if controls[1] then
-        spr(73, 3, 120)
+        zspr(73, 3, 120)
         o = print(controls[1], 12, 121, 0) + 8
     end
     if controls[2] then
-        spr(74, o, 120)
+        zspr(74, o, 120)
         print(controls[2], o + 9, 121, 0)        
     end
 

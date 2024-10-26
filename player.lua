@@ -1,6 +1,8 @@
 function make_player(x, y)
-    local p = make_ent({40,41,42}, x, y, 4)
+    local p = make_ent({make_spritepart(40,41,42,0,0)}, x, y, 4)
+    p.hoppable=false
     p.update = function(self)
+        --self.height = sin(time / 0x0.002) * 4 + 4
     end
     p.control = function(self)
         local dx = -tonum(btn(0)) + tonum(btn(1))

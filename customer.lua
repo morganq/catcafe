@@ -34,7 +34,7 @@ function generate_desires()
 end
 
 function make_customer()
-    local e = make_ent({62,62,68}, door.x + 2, door.y, 1)
+    local e = make_ent(OBJECT_SPRITES.customer, door.x + 2, door.y, 1)
     populate_table(e, "state=entering,state_timer=0,total_time=0,move_timer=10,oldx=0,oldy=-999,is_customer=true,status_timer=0")
     today_stats["customers"] += 1
     e.pal = split(rnd(CUST_PALS))
@@ -64,7 +64,7 @@ function make_customer()
         function ds(b, x, y)
             _draw(self, b, x, y)
             pal({[4] = self.hc})
-            spr(self.hair + ((self.dir[2] < 0) and 1 or 0), self.x - 5.5, self.y - 9)
+            zspr(self.hair + ((self.dir[2] < 0) and 1 or 0), self.x - 5.5, self.y - 9)
             pal()
         end
         if self.move_timer > 0 then
@@ -81,7 +81,7 @@ function make_customer()
         end
         --[[
         if self.state == "queued" and self.state_timer > 150 then
-            spr(69, self.x - 2, self.y - 13)
+            zspr(69, self.x - 2, self.y - 13)
         end
         ]]
         if self.status_timer > 0 then

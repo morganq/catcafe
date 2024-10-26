@@ -10,7 +10,7 @@ function _draw()
         if i <= #SPRITE_META then
             local m = SPRITE_META[ i ]
             --sspr(m[1], m[2], m[3], m[4], ox + m[5], oy + m[6])
-            spr(i, ox, oy)
+            zspr(i, ox, oy)
             rect(ox - 1 - m[5], oy - 1 - m[6], ox + m[3] - m[5], oy + m[4] - m[6], 6)
             print(i, ox - 1, oy - 6, 0)
             if m[11] > 0 then

@@ -60,17 +60,12 @@ end
 
 function make_cat(index, x, y)
     local e = make_ent(1, x, y, 0)
-    populate_table(e, "state=sitting,state_timer=0,outline_color=1,hopping_up=0,hop_time=0,debug_hitbox=false,collides=false,sit_time=0,boost_time=0")
+    populate_table(e, "state=sitting,state_timer=0,outline_color=1,hopping_up=0,hop_time=0,debug_hitbox=false,collides=true,sit_time=0,boost_time=0")
     
     generate_cat_features(index, e)
     
     printh("cat: " .. e.name .. "\nbase: " .. e.base_color .. "\neye: " .. e.eye_color .. "\nsit: " .. e.prop_sit .. "\nspeed: " .. e.prop_speed .. "\nannoying: " .. e.prop_annoying .. "\nactive: " .. e.prop_active .. "\nrun: " .. e.prop_run)
 
-    local _draw = e.draw
-    e.draw = function(self)
-        --line(self.x - 2, self.y + 1, self.x + 1, self.y + 1, 1)
-        _draw(self)
-    end
     e.set_state = function(self, state)
         self.state = state
         self.state_timer = 0
@@ -84,7 +79,7 @@ function make_cat(index, x, y)
             local spots = get_sitting_spots()
             if #spots > 0 and rnd() < e.prop_annoying then
                 local c = rnd(spots)
-                local ss = c:get_sit_spot()
+                local ss = {c.x, c.y}
                 self:walk_to(ss[1], ss[2])
             else
                 self:walk_to((rnd(cafe_size[1] - 1) + 0.5) * 12, (rnd(cafe_size[2] - 1) + 0.5) * 12)
@@ -132,9 +127,9 @@ function make_cat(index, x, y)
                 end
                 if self.height < self.hopping_up then
                     self.height += 0.5
-                    self:set_sprite(17 + min(self.hop_time \ (8 / boost), 1))
+                    self:set_sprite(14 + min(self.hop_time \ (8 / boost), 1))
                 end
-                self:move(self.x + delta[1] / 4, self.y + delta[2] / 4)
+                self:move(self.x + delta[1] / 8, self.y + delta[2] / 8)
             else
                 self:set_sprite(2 + (self.state_timer \ 8) % 6)
                 self.hopping_up = 0
@@ -143,12 +138,12 @@ function make_cat(index, x, y)
                     if ent != self and ent.collides then
                         local c = collide_ents(self, ent)
                         if c[1] != 0 or c[2] != 0 then
-                            if false then
+                            if not ent.hoppable then
                                 if self.state_timer > 30 and rnd() < 0.5 then
                                     self:set_state("sitting")
                                 else
-                                    self.walk_target[1] = self.x + c[1] * 5
-                                    self.walk_target[2] = self.y + c[2] * 5
+                                    self.walk_target[1] = self.x + sgn(c[1]) * 8
+                                    self.walk_target[2] = self.y + sgn(c[2]) * 8
                                     printh("PUSH AWAY")
                                 end
                                 self:move(self.x + c[1], self.y + c[2])
