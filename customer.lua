@@ -34,7 +34,7 @@ function generate_desires()
 end
 
 function make_customer()
-    local e = make_ent(OBJECT_SPRITES.customer, door.x + 2, door.y, 1)
+    local e = make_ent("customer", OBJECT_SPRITES.customer, door.x + 2, door.y + 8)
     populate_table(e, "state=entering,state_timer=0,total_time=0,move_timer=10,oldx=0,oldy=-999,is_customer=true,status_timer=0")
     today_stats["customers"] += 1
     e.pal = split(rnd(CUST_PALS))
@@ -51,42 +51,16 @@ function make_customer()
     if e.pal[15] == 2 or e.pal[15] == 4 then
         e.hc = 1--rnd(split"1,")
     end
+    e.pal[4] = e.hc
     e.desires = generate_desires()
+    e.parts[2] = make_spritepart(e, e.hair, e.hair, e.hair + 1, 0, -2, 10)
     e.cats_seen = {}
+
     local _move = e.move
     e.move = function(self, x, y)
         self.oldx, self.oldy = self.x, self.y
         self.move_timer = 10
         _move(self, x, y)
-    end
-    local _draw = e.draw
-    e.draw = function(self)
-        function ds(b, x, y)
-            _draw(self, b, x, y)
-            pal({[4] = self.hc})
-            zspr(self.hair + ((self.dir[2] < 0) and 1 or 0), self.x - 5.5, self.y - 9)
-            pal()
-        end
-        if self.move_timer > 0 then
-            --fillp(0b0101101001011010.11)
-            fillp(0b0101010101010101.11)
-            if self.move_timer > 5 then
-                ds(false, self.oldx, self.oldy)
-            else
-                ds(false)
-            end
-            fillp()
-        else
-            ds()
-        end
-        --[[
-        if self.state == "queued" and self.state_timer > 150 then
-            zspr(69, self.x - 2, self.y - 13)
-        end
-        ]]
-        if self.status_timer > 0 then
-            center_print(self.status, self.x, self.y - 15, 1, 7, nil, true)
-        end
     end
     e.set_status = function(self, text)
         -- smile ⁶:001400221c000000
@@ -144,17 +118,10 @@ function make_customer()
         if bad_time then
             self:set_status("\fc⁶:0014001c22000000")
             --stars = (stars * 0.95) \ 1
-        else
-            --[[
-            local s = "\f9"
-            for i = 1, #self.cats_seen + 1 do
-                s ..= "⁶:083e1c0814000000"
-            end
-            self:set_status(s)
-            ]]
         end
     end
     e.update = function(self)
+        self.height = 0
         if self.move_timer > 0 then self.move_timer -= 1 end
         if self.state == "entering" then
             if self.state_timer > 60 then
@@ -175,6 +142,7 @@ function make_customer()
                 del(ents, self)
             end
         elseif self.state == "seated" then
+            self.height = 2
             if self.state_timer > 600 then
                 if rnd() < 0.5 then
                     self.seat.taken = false

@@ -1,30 +1,38 @@
-function get_meta_heights(meta)
-    local th = (meta[4] - meta[10])
-    return (meta[11] and (meta[11] * 2 + 1) or th), th
-end
-
-function make_spritepart(spri1, spri2, spri3, xo, yo, ho)
-    local meta = SPRITE_META[spri1]
+function make_spritepart(ent, spri1, spri2, spri3, xo, yo, ho)
     return {
+        ent = ent,
         spri={spri1, spri2, spri3},xo=xo or 0,yo=yo or 0,ho = ho or 0,
-        get_dir_spri = function(self, ent)
-            local s = self.spri[1]
-            local hflip = false
-            if ent.dir[1] == 0 then
-                if ent.dir[2] < 0 then
+        get_vars = function(self)
+            local s, dir, hflip = self.spri[1], self.ent.dir, false
+            if dir[1] == 0 then
+                if dir[2] < 0 then
                     s = self.spri[3]
                 end
             else
                 s = self.spri[2]
-                if ent.dir[1] < 0 then
+                if dir[1] < 0 then
                     hflip = true
                 end
             end
-            return s, hflip, SPRITE_META[s]
+            return {s, hflip, SPRITE_META[s]}
         end,
-        calculate_rect = function(self, ent)
-            local s = self:get_dir_spri(ent)
-            local meta = SPRITE_META[s]
+        get_sprite = function(self)
+            return self:get_vars()[1]
+        end,
+        get_top_height = function(self)
+            local meta = self:get_vars()[3]
+            return meta[4] - meta[10]
+        end,        
+        get_manual_height = function(self)
+            local meta = self:get_vars()[3]
+            return meta[11] and (meta[11] * 2 + 1) or (meta[4] - meta[10])
+        end,
+        get_total_height = function(self)
+            return self:get_top_height() + self.ent.height + self.ho
+        end,        
+        get_rect = function(self)
+            local s, hflip, meta = unpack(self:get_vars())
+            -- use hflip?
             local x1 = ent.x + meta[7] - meta[5] - meta[3] / 2 + self.xo
             local y1 = ent.y + meta[8] / 2 - meta[6] - meta[4] / 2 - 0.5 + self.yo
             return {
@@ -37,13 +45,20 @@ function make_spritepart(spri1, spri2, spri3, xo, yo, ho)
     }
 end
 
-function make_ent(parts, x, y)
-    if type(parts) == "number" then parts = {make_spritepart(parts,parts,parts,0,0)} end
-    local meta = SPRITE_META[parts[1].spri[1]]
-    local e = {x=x, y=y, meta=meta, pal=split"1,2,3,4,5,6,7,8,9,10,11,12,13,14,15"}
-    e.parts = parts
+function make_ent(name, parts_def, x, y, extras)
+    local e = {x=x, y=y, name=name, pal=split"1,2,3,4,5,6,7,8,9,10,11,12,13,14,15"}
+    e.parts = {}
+    if type(parts_def) == "number" then
+        parts_def = {{parts_def, parts_def, parts_def, 0, 0, 0}}
+    end
+    for s in all(parts_def) do 
+        local args = pack(unpack(s))
+        add(args, e, 1)
+        add(e.parts, make_spritepart(unpack(args)))
+    end
     e.dir = {0,1}
-    populate_table(e, "moveable=false,interactable=false,blocks_placement=true,collides=true,shaking=0,name=none,height=0,imm_offset_x=0,imm_offset_y=0,imm_offset_h=0,hflip=false,hoppable=true")
+    populate_table(e, "moveable=false,interactable=false,blocks_placement=true,collides=true,shaking=0,height=0,imm_offset_x=0,imm_offset_y=0,imm_offset_h=0,hflip=false,hoppable=true")
+    if extras then populate_table(e, extras) end
 
     e.update = function(self)
         self.imm_offset_x = 0
@@ -63,37 +78,37 @@ function make_ent(parts, x, y)
             self.outline_color = nil
         end
     end
-    e.set_sprite = function(self, i)
-        if type(i) == "number" then i = make_spritepart(i,i,i) end
-        self.parts[1] = i
+    e.set_spritepart = function(self, def, index)
+        self.parts[index or 1] = make_spritepart(self,def,def,def,0,0,0)
         self:calculate_rect()
     end
     e.get_rect = function(self)
-        return unpack(self.rect)
+        return self.cached_rect
     end
     e.move = function(self, x, y)
         self.x, self.y = x, y
-        self:calculate_rect()        
+        self:calculate_rect()
     end
+    e.adjust = function(self, dx, dy)
+        self:move(self.x + dx, self.y + dy)
+        local x1, x2, y1, y2 = unpack(self:get_rect())
+        if x1 <= 0 or x2 >= cafe_size[1] * 12 + 1 or y1 <= -4 or y2 >= cafe_size[2] * 12 - 1 then
+            self:move(self.x - dx, self.y - dy)
+        end
+    end    
     e.rotate = function(self)
         self.dir = {self.dir[2], -self.dir[1]}
         self:calculate_rect()
     end
     e.calculate_rect = function(self)
-        self.rect = self.parts[1]:calculate_rect(self)
-        return self.rect
+        self.cached_rect = self.parts[1]:get_rect()
+        return self.cached_rect
     end
     e.shake = function(self)
         self.shaking = 20
     end
-    e.get_top_height = function(self)
-        local th = 0
-        for p in all(self.parts) do
-            local _,_,m = p:get_dir_spri(self)
-            local _,z = get_meta_heights(m)
-            th += z
-        end
-        return th
+    e.get_total_height = function(self)
+        return self.parts[#self.parts]:get_total_height()
     end
     e:calculate_rect()
     add(ents, e)
@@ -104,16 +119,16 @@ function draw_ents()
     local S_LOW, S_HIGH = 0, 32
 
     function get_slices(ent, part)
-        local s, hflip, meta = part:get_dir_spri(ent)
+        local s, hflip, meta = unpack(part:get_vars())
         local slices = {}
         local sx, sy, sw, sh, ox, oy, cx, cy, cw, ch = unpack(meta)
         local h = 0
         local eh = ent.height \ 1 + part.ho + ent.imm_offset_h \ 1
-        local mh,th = get_meta_heights(meta)
+        local mh,th = part:get_manual_height(), part:get_top_height()
         
         ox += part.xo
         oy += part.yo  
-        --printh("-- " .. ent.name .. " --")
+        
         for i = sh, ch, -1 do
             local iyo, iho, ih = i - 1, h + 1, 1
             if i == ch or h > mh then
@@ -192,44 +207,10 @@ function make_blocker(x, y, w, h)
     return e
 end
 
-function make_floor_item(name, spri3, x, y)
-    local e = make_ent(spri3, x, y)
-    populate_table(e, "moveable=true,taken=false,name=" .. name)
-
-    function e.try_move(self, dx, dy)
-        e:move(self.x + dx, self.y + dy)
-        local x1, x2, y1, y2 = self:get_rect()
-        if x1 <= 0 or x2 >= cafe_size[1] * 12 + 1 or y1 <= -4 or y2 >= cafe_size[2] * 12 - 1 then
-            self.x -= dx
-            self.y -= dy
-            self:calculate_rect()
-        end
-    end
-
-    return e
-end
-
-function make_counter_item(name, spri3, x, y)
-    local e = make_floor_item(name, spri3, x, y)
-    e.moveable = false
-    e.hoppable = false
-    return e
-end
-
-function make_counter(spri3, x, y, moveable)
-    local e = make_floor_item("none",spri3, x, y)
-    populate_table(e, "is_counter=true")
-    e.moveable = moveable or false
-    local x1, x2, y1, y2 = e:get_rect()
-    
-    _,e.counter_height = get_meta_heights(e.meta)
-    return e
-end
-
 function collide_ents(a, b)
     local ox, oy = 0,0
-    local ax1, ax2, ay1, ay2 = a:get_rect()
-    local bx1, bx2, by1, by2 = b:get_rect()
+    local ax1, ax2, ay1, ay2 = unpack(a:get_rect())
+    local bx1, bx2, by1, by2 = unpack(b:get_rect())
     if ax2 > bx1 and ax1 < bx2 and ay2 >= by1 and ay1 <= by2 then
         local ox1, ox2, oy1, oy2 = ax2 - bx1, bx2 - ax1, ay2 - by1, by2 - ay1
         local sx, sy = 1,1
@@ -247,6 +228,6 @@ function collide_ents(a, b)
 end
 
 function point_in_ent(x, y, e)
-    local ax1, ax2, ay1, ay2 = e:get_rect()
-    return x >= ax1 and x <= ax2 and y >= ay1 and y <= ay2
+    local a = e:get_rect()
+    return x >= a[1] and x <= a[2] and y >= a[3] and y <= a[4]
 end

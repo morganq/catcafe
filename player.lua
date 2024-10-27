@@ -1,6 +1,5 @@
 function make_player(x, y)
-    local p = make_ent({make_spritepart(40,41,42,0,0)}, x, y, 4)
-    p.hoppable=false
+    local p = make_ent("player", {{40,41,42,0,0}}, x, y, "hoppable=false")
     p.update = function(self)
         --self.height = sin(time / 0x0.002) * 4 + 4
     end
@@ -69,7 +68,7 @@ function make_player(x, y)
         end
     end
     p.get_rect = function(self)
-        return unpack(self:calculate_rect())
+        return self:calculate_rect()
     end
     return p
 end

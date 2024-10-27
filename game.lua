@@ -42,17 +42,6 @@ Goal: Get to 9x7
 
 ]]
 
-for os in all(OBJECT_SPRITES) do
-    for k,v in pairs(os) do
-        local t = {}
-        local parts = split(v, "|")
-        for part in all(parts) do
-            add(t, make_spritepart(unpack(split(part,"/"))))
-        end
-        OBJECT_SPRITES[k] = t
-    end
-end
-
 BILLS = {1, 5, 10, 20}
 
 function action_buy_grinder() prices["drip coffee"] = 3 end
@@ -187,25 +176,24 @@ state_game.start = function()
     
     description_t = 0
 
-    make_floor_item("table",OBJECT_SPRITES["table"], 51, 16)
-    make_floor_item("chair",OBJECT_SPRITES["chair"], 52, 6)
-    make_floor_item("bookcase",30, 12, 6)
+    make_ent("table",OBJECT_SPRITES["table"], 51, 16, "moveable=true")
+    make_ent("chair",OBJECT_SPRITES["chair"], 52, 6, "moveable=true")
+    make_ent("bookcase", 30, 12, 6, "moveable=true")
     -- opt: string setup
-    local rc1 = make_counter(47, 6, 44)
+    local rc1 = make_ent("counter", 47, 6, 44, "is_counter=true")
     --flap = make_ent(48, 18, 44)
-    local rc2 = make_counter(49, 30, 44)
-    make_counter(50, 43, 44)
-    make_counter(51, 54, 45)
-    make_counter(75, 54, 55)
+    local rc2 = make_ent("counter", 49, 30, 44, "is_counter=true")
+    make_ent("counter", 50, 43, 44, "is_counter=true")
+    make_ent("counter", 51, 54, 45, "is_counter=true")
+    make_ent("counter", 75, 54, 55, "is_counter=true")
 
-    drip = make_counter_item("drip machine",84, 2, 34, 1)
-    drip.height = rc1.counter_height
+    drip = make_ent("drip machine",84, 2, 34, "hoppable=false")
+    drip.height = rc1:get_total_height()
     rc1.counter_item = drip 
     drip:move(rc1.x, rc1.y)
 
-    register = make_counter_item("register",53, 27, 34, 1)
-    register.height = rc2.counter_height
-    register.interactable = true
+    register = make_ent("register",53, 27, 34, "hoppable=false,interactable=true")
+    register.height = rc2:get_total_height()
     register.interact = function(self)
         if #customer_queue > 0 then
             activity = register_activity(customer_queue[1])
@@ -217,7 +205,7 @@ state_game.start = function()
 
 
     day_num = 1
-    door = make_ent(35, 31, -5)
+    door = make_ent("door", OBJECT_SPRITES["door"], 31, -5)
     --blocker = make_blocker(door.x - 10, door.y + 4, 10, register.y - door.y - 6)
 
     player = make_player(31, 8)
@@ -359,7 +347,7 @@ state_game.update = function()
             activity.selected_counter = (activity.selected_counter + dx + dy - 1) % #counters + 1
             local c = counters[activity.selected_counter]
             e:move( c.x, c.y )
-            e.height = c.counter_height
+            e.height = c:get_total_height()
             if c.counter_item then c.counter_item.imm_offset = 5 end
             if btnp(B_CONFIRM) then
                 if c.counter_item then
@@ -373,7 +361,7 @@ state_game.update = function()
                 
             end            
         else
-            e:try_move( dx * 2 , dy * 2 )
+            e:adjust( dx * 2 , dy * 2 )
             for ent in all(ents) do
                 if ent != e then
                     local col = collide_ents(e, ent)
@@ -433,7 +421,7 @@ state_game.update = function()
                     if item.is_counter then
                         e = make_counter(OBJECT_SPRITES[item.sprite], 25, 0, true)
                     else
-                        e = make_floor_item(item.title, OBJECT_SPRITES[item.sprite], 25, 0)
+                        e = make_ent(item.title, OBJECT_SPRITES[item.sprite], 25, 0, "moveable=true")
                     end
                     if item.stat then
                         stats[item.stat] += item.stat_value
@@ -453,7 +441,7 @@ state_game.update = function()
                 else
                     if item.price <= money then
                         money -= item.price
-                        local e = make_counter_item(item.title, OBJECT_SPRITES[item.sprite], 25, 0)
+                        local e = make_ent(item.title, OBJECT_SPRITES[item.sprite], 25, 0, "hoppable=false")
                         e.menu = split(item.menu,"/")
                         if item.fn then _ENV[item.fn]() end
                         activity = moving_activity(e, true)

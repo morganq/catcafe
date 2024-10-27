@@ -12,6 +12,7 @@ CAT_EYES = {
 
 CAT_SHADOWS = split"0,0,1,X,2,X,5,X,X,4,9"
 
+--200ish tokens
 function generate_cat_features(index, cat)
     local t = cat or {}
     t.name = CAT_NAMES[index]
@@ -54,12 +55,13 @@ function generate_cat_features(index, cat)
     t.pal[11] = t.portrait_iris_color
     t.pal[8] = t.portrait_pupil_color
     t.pal[12] = t.portrait_border_color
-    --if t.base_color == 0 or t.base_color == 1 then t.outline_color = 0 end
+    if t.base_color == 0 or t.base_color == 1 then t.pal[1] = 0 end
     return t
 end
 
+--659 tokens
 function make_cat(index, x, y)
-    local e = make_ent(1, x, y, 0)
+    local e = make_ent("cat", 1, x, y)
     populate_table(e, "state=sitting,state_timer=0,hopping_up=0,hop_time=0,debug_hitbox=false,collides=true,sit_time=0,boost_time=0")
     
     generate_cat_features(index, e)
@@ -99,17 +101,17 @@ function make_cat(index, x, y)
     e.update = function(self)
         self.boost_time -= 1
         if self.state == "sitting" then
-            self:set_sprite(1)
+            self:set_spritepart(1)
             if self.state_timer > self.sit_time then
                 self:pick_random_state()
             end
         elseif self.state == "playing" then
-            self:set_sprite((self.state_timer < 10) and 1 or 23 + self.state_timer \ 5 % 4)
+            self:set_spritepart((self.state_timer < 10) and 1 or 23 + self.state_timer \ 5 % 4)
             if self.state_timer > 120 then
                 self:pick_random_state()
             end
         elseif self.state == "belly" then
-            self:set_sprite((self.state_timer < 30) and 1 or 23)
+            self:set_spritepart((self.state_timer < 30) and 1 or 23)
             if self.state_timer > 120 then
                 self:pick_random_state()
             end            
@@ -123,15 +125,15 @@ function make_cat(index, x, y)
                 self.hop_time += 1
                 if self.height > self.hopping_up then
                     self.height -= 0.5
-                    self:set_sprite(87)
+                    self:set_spritepart(87)
                 end
                 if self.height < self.hopping_up then
                     self.height += 0.5
-                    self:set_sprite(14 + min(self.hop_time \ (8 / boost), 1))
+                    self:set_spritepart(14 + min(self.hop_time \ (8 / boost), 1))
                 end
                 self:move(self.x + delta[1] / 8, self.y + delta[2] / 8)
             else
-                self:set_sprite(2 + (self.state_timer \ 8) % 6)
+                self:set_spritepart(2 + (self.state_timer \ 8) % 6)
                 self.hopping_up = 0
                 self:move(self.x + delta[1], self.y + delta[2])
                 for ent in all(ents) do
@@ -150,13 +152,9 @@ function make_cat(index, x, y)
                             else 
                                 local h = 0
                                 for part in all(ent.parts) do
-                                    part.get_rect = function(self)
-                                        return unpack(part:calculate_rect(ent))
-                                    end
                                     local c2 = collide_ents(self, part)
                                     if c2[1] != 0 or c2[2] != 0 then
-                                        _,_,m = part:get_dir_spri(ent)
-                                        h += m[4] - m[10] + 1
+                                        h = max(h, part:get_total_height())
                                     end
                                 end
                                 self.hopping_up = max(self.hopping_up, h)

@@ -17,4 +17,16 @@ couch3=105/105/105/0/0/0
 plant1=106/106/106/0/0/0
 table2=107/107/107/0/0/0
 chair2=108/108/108/0/0/0|109/110/111/0/0/5
+door=35/35/35/0/0/0
 ]])
+
+for os in all(OBJECT_SPRITES) do
+    for k,v in pairs(os) do
+        local t = {}
+        local parts = split(v, "|")
+        for part in all(parts) do
+            add(t, split(part,"/"))
+        end
+        OBJECT_SPRITES[k] = t
+    end
+end

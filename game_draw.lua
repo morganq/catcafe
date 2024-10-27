@@ -1,3 +1,4 @@
+--1441 tokens
 state_game.draw = function()
     local controls = {}
     local description = nil
@@ -44,13 +45,18 @@ zspr,39,57,-11
     zspr(33, cspx - 1, -16)
 
     draw_ents()
+    for customer in all(customers) do
+        if customer.status_timer > 0 then
+            center_print(customer.status, customer.x, customer.y - 15, 1, 7, nil, true)
+        end        
+    end
 
     if activity.name == "moving" then
         if activity.counter_only then
             local counters = get_counters()
             for c in all(counters) do
                 local x,y = c.x, c.y
-                y -= c.counter_height
+                y -= c:get_total_height()
                 rect(x - 1, y - 1, x + 1, y + 1, 7)
             end
         else
