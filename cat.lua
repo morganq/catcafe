@@ -54,13 +54,13 @@ function generate_cat_features(index, cat)
     t.pal[11] = t.portrait_iris_color
     t.pal[8] = t.portrait_pupil_color
     t.pal[12] = t.portrait_border_color
-    if t.base_color == 0 or t.base_color == 1 then t.outline_color = 0 end
+    --if t.base_color == 0 or t.base_color == 1 then t.outline_color = 0 end
     return t
 end
 
 function make_cat(index, x, y)
     local e = make_ent(1, x, y, 0)
-    populate_table(e, "state=sitting,state_timer=0,outline_color=1,hopping_up=0,hop_time=0,debug_hitbox=false,collides=true,sit_time=0,boost_time=0")
+    populate_table(e, "state=sitting,state_timer=0,hopping_up=0,hop_time=0,debug_hitbox=false,collides=true,sit_time=0,boost_time=0")
     
     generate_cat_features(index, e)
     
@@ -148,7 +148,18 @@ function make_cat(index, x, y)
                                 end
                                 self:move(self.x + c[1], self.y + c[2])
                             else 
-                                self.hopping_up = max(self.hopping_up,ent.top_height)
+                                local h = 0
+                                for part in all(ent.parts) do
+                                    part.get_rect = function(self)
+                                        return unpack(part:calculate_rect(ent))
+                                    end
+                                    local c2 = collide_ents(self, part)
+                                    if c2[1] != 0 or c2[2] != 0 then
+                                        _,_,m = part:get_dir_spri(ent)
+                                        h += m[4] - m[10] + 1
+                                    end
+                                end
+                                self.hopping_up = max(self.hopping_up, h)
                                 self.hop_time = 0
                             end
                         end

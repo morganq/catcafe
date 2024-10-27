@@ -13,6 +13,7 @@ cartdata("catcafe_0")
 #include player.lua
 #include customer.lua
 #include cat.lua
+#include sprites.lua
 #include game.lua
 #include game_draw.lua
 #include src.lua

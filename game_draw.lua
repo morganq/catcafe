@@ -49,7 +49,7 @@ zspr,39,57,-11
         if activity.counter_only then
             local counters = get_counters()
             for c in all(counters) do
-                local x,y = unpack(c.counter_center)
+                local x,y = c.x, c.y
                 y -= c.counter_height
                 rect(x - 1, y - 1, x + 1, y + 1, 7)
             end

@@ -42,19 +42,6 @@ Goal: Get to 9x7
 
 ]]
 
-OBJECT_SPRITES = string_multitable([[
-customer=62/62/68/0/0/0
-chair=27/27/27/0/0/0|29/28/99/0/0/5
-bookshelf=30/30/30/0/0/0
-table=36/98/36/0/0/0
-register=53/53/53/0/0/0
-drip machine=84/84/84/0/0/0
-grinder=86/86/86/0/0/0
-espresso=97/97/97/0/0/0
-frother=52/52/52/0/0/0
-pastries=85/85/85/0/0/0
-]])
-
 for os in all(OBJECT_SPRITES) do
     for k,v in pairs(os) do
         local t = {}
@@ -92,8 +79,15 @@ function phone_activity()
             {img = 55, title = "info", scroll_page = 8, children = {}},
             {img = 56, title = "furniture", scroll_page = 4, children = string_multitable([[
 img=27,title=chair,type=buy_floor,sprite=chair,price=20,description=always good to have more seating
+img=110,title=chair2,type=buy_floor,sprite=chair2,price=30
+img=103,title=couch 1,type=buy_floor,sprite=couch1,price=25,description=left side sectional
+img=104,title=couch 2,type=buy_floor,sprite=couch2,price=25,description=center sectional
+img=105,title=couch 3,type=buy_floor,sprite=couch3,price=25,description=right side sectional
 img=36,title=table,type=buy_floor,sprite=table,price=40,stat=appeal,stat_value=0.5,description=customers usually expect tables
+img=107,title=table2,type=buy_floor,sprite=table2,price=40,stat=appeal,stat_value=0.5,description=customers usually expect tables
 img=30,title=bookshelf,type=buy_floor,sprite=bookshelf,price=60,stat=max_cats,stat_value=0.25,description=cats might like to climb it
+img=100,title=counter,type=buy_floor,sprite=cabinet,price=60,is_counter=true,description=can fit appliances or serve as decoration
+img=106,title=plant,type=buy_floor,sprite=plant1,price=10,description=plant,stat=appeal,stat_value=0.1,hoppable=false
 ]])},
             {img = 57, title = "appliances", scroll_page = 4, children = string_multitable([[
 img=53,title=register,type=buy_counter,price=100,sprite=register
@@ -139,8 +133,9 @@ end
 
 function get_seats(must_be_empty)
     local s = {}
+    local chairs = split"chair,couch1,couch2,couch3"
     for ent in all(ents) do
-        if ent.name == "chair" then
+        if contains(chairs, ent.name) then
             if not must_be_empty or not ent.taken then
                 add(s,ent)
             end
@@ -206,7 +201,7 @@ state_game.start = function()
     drip = make_counter_item("drip machine",84, 2, 34, 1)
     drip.height = rc1.counter_height
     rc1.counter_item = drip 
-    drip:move(unpack(rc1.counter_center))
+    drip:move(rc1.x, rc1.y)
 
     register = make_counter_item("register",53, 27, 34, 1)
     register.height = rc2.counter_height
@@ -218,7 +213,7 @@ state_game.start = function()
         end
     end
     rc2.counter_item = register
-    register:move(unpack(rc2.counter_center))
+    register:move(rc2.x, rc2.y)
 
 
     day_num = 1
@@ -361,9 +356,9 @@ state_game.update = function()
         activity.drop_valid = true
         if activity.counter_only then
             local counters = get_counters()
-            activity.selected_counter = mid(activity.selected_counter + dx + dy, 1, #counters)
+            activity.selected_counter = (activity.selected_counter + dx + dy - 1) % #counters + 1
             local c = counters[activity.selected_counter]
-            e:move( c.counter_center[1], c.counter_center[2] )
+            e:move( c.x, c.y )
             e.height = c.counter_height
             if c.counter_item then c.counter_item.imm_offset = 5 end
             if btnp(B_CONFIRM) then
@@ -434,10 +429,16 @@ state_game.update = function()
             elseif item.type == "buy_floor" then
                 if item.price <= money then
                     money -= item.price
-                    local e = make_floor_item(item.title, OBJECT_SPRITES[item.sprite], 25, 0)
+                    local e
+                    if item.is_counter then
+                        e = make_counter(OBJECT_SPRITES[item.sprite], 25, 0, true)
+                    else
+                        e = make_floor_item(item.title, OBJECT_SPRITES[item.sprite], 25, 0)
+                    end
                     if item.stat then
                         stats[item.stat] += item.stat_value
                     end
+                    e.hoppable = item.hoppable or true
                     activity = moving_activity(e)
                 else
                     hint("not enough money")

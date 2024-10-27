@@ -37,10 +37,10 @@ function make_spritepart(spri1, spri2, spri3, xo, yo, ho)
     }
 end
 
-function make_ent(parts, x, y, depth_offset)
+function make_ent(parts, x, y)
     if type(parts) == "number" then parts = {make_spritepart(parts,parts,parts,0,0)} end
     local meta = SPRITE_META[parts[1].spri[1]]
-    local e = {x=x, y=y, depth_offset=depth_offset or 0, meta=meta, pal=split"1,2,3,4,5,6,7,8,9,10,11,12,13,14,15"}
+    local e = {x=x, y=y, meta=meta, pal=split"1,2,3,4,5,6,7,8,9,10,11,12,13,14,15"}
     e.parts = parts
     e.dir = {0,1}
     populate_table(e, "moveable=false,interactable=false,blocks_placement=true,collides=true,shaking=0,name=none,height=0,imm_offset_x=0,imm_offset_y=0,imm_offset_h=0,hflip=false,hoppable=true")
@@ -49,17 +49,18 @@ function make_ent(parts, x, y, depth_offset)
         self.imm_offset_x = 0
         self.imm_offset_y = 0
         self.imm_offset_h = 0
-        if activity.name == "play" and self == selected_ent and time % 0x0.000c > 0x0.0006 then
+        if self == selected_ent then
             if self.interactable then
-                self.pal = split"10,10,10,10,10,10,10,10,10,10,10,10,10,10,10"
+                self.outline_color = 10
             else
-                self.pal = split"7,7,7,7,7,7,7,7,7,7,7,7,7,7,7"
+                if activity.name == "moving" and not activity.drop_valid then
+                    self.outline_color = 8
+                else
+                    self.outline_color = 7
+                end
             end
         else
-            self.pal = split"1,2,3,4,5,6,7,8,9,10,11,12,13,14,15"
-        end
-        if activity.name == "moving" and activity.ent == self then
-            self.imm_offset_h = 0
+            self.outline_color = nil
         end
     end
     e.set_sprite = function(self, i)
@@ -85,6 +86,15 @@ function make_ent(parts, x, y, depth_offset)
     e.shake = function(self)
         self.shaking = 20
     end
+    e.get_top_height = function(self)
+        local th = 0
+        for p in all(self.parts) do
+            local _,_,m = p:get_dir_spri(self)
+            local _,z = get_meta_heights(m)
+            th += z
+        end
+        return th
+    end
     e:calculate_rect()
     add(ents, e)
     return e
@@ -103,7 +113,7 @@ function draw_ents()
         
         ox += part.xo
         oy += part.yo  
-        printh("-- " .. ent.name .. " --")
+        --printh("-- " .. ent.name .. " --")
         for i = sh, ch, -1 do
             local iyo, iho, ih = i - 1, h + 1, 1
             if i == ch or h > mh then
@@ -116,8 +126,8 @@ function draw_ents()
                 ent.x - sw / 2, ent.y - iho - oy + ch / 2 - eh,
                 sw, ih,
                 hflip
-            }, ent.pal}
-            printh(i .. " / " .. h + eh .. " / " .. iyo .. ", " .. iho .. ", " .. ih)
+            }, ent.pal, ent.outline_color, i == sh}
+            --printh(i .. " / " .. h + eh .. " / " .. iyo .. ", " .. iho .. ", " .. ih)
             if h > mh then return slices end
             h += 1
         end
@@ -135,7 +145,20 @@ function draw_ents()
     end
     for s = S_LOW, S_HIGH do
         for slice in all(slices[s]) do
-            r, cpal = unpack(slice)
+            r, cpal, oc, is_bottom = unpack(slice)
+            if oc then
+                memset(0x5f01,oc,15)
+                for co in all({{-1,0},{1,0},{0,1}}) do
+                    camera(camx + co[1], camy + co[2])
+                    sspr(unpack(r))
+                end
+                if is_bottom then
+                    camera(camx, camy - 1)
+                    sspr(unpack(r))
+                end 
+                camera(camx, camy)
+            end
+            
             --rectfill(r[5], r[6], r[5] + r[3] - 1, r[6] + r[4] - 1, 8)
             --if time % 0x0.0020 > 0x0.001 then
             --    
@@ -169,8 +192,8 @@ function make_blocker(x, y, w, h)
     return e
 end
 
-function make_floor_item(name, spri3, x, y, depth_offset)
-    local e = make_ent(spri3, x, y, depth_offset)
+function make_floor_item(name, spri3, x, y)
+    local e = make_ent(spri3, x, y)
     populate_table(e, "moveable=true,taken=false,name=" .. name)
 
     function e.try_move(self, dx, dy)
@@ -186,20 +209,20 @@ function make_floor_item(name, spri3, x, y, depth_offset)
     return e
 end
 
-function make_counter_item(name, spri3, x, y, depth_offset)
-    local e = make_floor_item(name, spri3, x, y, (depth_offset or 0) - 2)
+function make_counter_item(name, spri3, x, y)
+    local e = make_floor_item(name, spri3, x, y)
     e.moveable = false
     e.hoppable = false
     return e
 end
 
-function make_counter(spri3, x, y)
-    local e = make_ent(spri3, x, y)
+function make_counter(spri3, x, y, moveable)
+    local e = make_floor_item("none",spri3, x, y)
     populate_table(e, "is_counter=true")
+    e.moveable = moveable or false
     local x1, x2, y1, y2 = e:get_rect()
     
-    e.counter_center = {(x2 + x1) / 2 + 0.5, (y1 + y2) / 2 - 0.5}
-    _,e.counter_height = get_meta_heights(SPRITE_META[spri3])
+    _,e.counter_height = get_meta_heights(e.meta)
     return e
 end
 
