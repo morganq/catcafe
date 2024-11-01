@@ -1,3 +1,5 @@
+poke(0x5F2D, 0x1) -- mouse
+
 --[[
 
 Goal: Get to 9x7
@@ -67,28 +69,29 @@ function phone_activity()
     return {name = "phone", tree = {scroll_page = 8, children = {
             {img = 55, title = "info", scroll_page = 8, children = {}},
             {img = 56, title = "furniture", scroll_page = 4, children = string_multitable([[
-img=27,title=chair,type=buy_floor,sprite=chair,price=20,description=always good to have more seating
-img=110,title=chair2,type=buy_floor,sprite=chair2,price=30
+sspr=24/13/7/14,title=chair,type=buy_floor,sprite=chair,price=15,description=always good to have more seating
+sspr=56/0/7/12,title=chair2,type=buy_floor,sprite=chair2,price=25
 img=103,title=couch 1,type=buy_floor,sprite=couch1,price=25,description=left side sectional
 img=104,title=couch 2,type=buy_floor,sprite=couch2,price=25,description=center sectional
 img=105,title=couch 3,type=buy_floor,sprite=couch3,price=25,description=right side sectional
-img=36,title=table,type=buy_floor,sprite=table,price=40,stat=appeal,stat_value=0.5,description=customers usually expect tables
-img=107,title=table2,type=buy_floor,sprite=table2,price=40,stat=appeal,stat_value=0.5,description=customers usually expect tables
-img=30,title=bookshelf,type=buy_floor,sprite=bookshelf,price=60,stat=max_cats,stat_value=0.25,description=cats might like to climb it
-img=100,title=counter,type=buy_floor,sprite=cabinet,price=60,is_counter=true,description=can fit appliances or serve as decoration
-img=106,title=plant,type=buy_floor,sprite=plant1,price=10,description=plant,stat=appeal,stat_value=0.1,hoppable=false
+img=36,title=table,type=buy_floor,sprite=table,price=30,stat=appeal,stat_value=0.5,description=customers usually expect tables
+img=107,title=table2,type=buy_floor,sprite=table2,price=30,stat=appeal,stat_value=0.5,description=customers usually expect tables
+img=30,title=bookshelf,type=buy_floor,sprite=bookshelf,price=50,stat=max_cats,stat_value=0.25,description=cats might like to climb it
+img=100,title=counter,type=buy_floor,sprite=cabinet,price=50,is_counter=true,description=can fit appliances or serve as decoration
+img=106,title=plant,type=buy_floor,sprite=plant1,price=8,description=plant,stat=appeal,stat_value=0.1,hoppable=false
 ]])},
             {img = 57, title = "appliances", scroll_page = 4, children = string_multitable([[
 img=53,title=register,type=buy_counter,price=100,sprite=register
 img=84,title=drip machine,type=buy_counter,price=50,sprite=drip machine
-img=86,title=grinder,type=buy_counter,price=50,sprite=grinder,fn=action_buy_grinder,description=raises drip coffee price +$1
-img=97,title=pastries,type=buy_counter,price=50,sprite=pastries,menu=sweet pastry/savory pastry,description=adds pastries to the menu
-img=52,title=espresso,type=buy_counter,price=500,sprite=espresso,stat=appeal,stat_value=0.5,menu=espresso,description=adds espresso to the menu
-img=85,title=frother,type=buy_counter,price=150,sprite=frother,stat=appeal,stat_value=1.0,menu=cappuccino/latte,requires=espresso,description=adds espresso milk drinks to the menu
+img=116,title=cream+sug,type=buy_counter,price=20,sprite=cream,stat=appeal,stat_value=0.25,description=self serve cream and sugar packets
+img=86,title=grinder,type=buy_counter,price=35,sprite=grinder,fn=action_buy_grinder,description=raises drip coffee price +$1
+img=97,title=pastries,type=buy_counter,price=40,sprite=pastries,menu=sweet pastry/savory pastry,description=adds pastries to the menu
+img=52,title=espresso,type=buy_counter,price=100,sprite=espresso,stat=appeal,stat_value=0.5,menu=espresso,description=adds espresso to the menu
+img=85,title=frother,type=buy_counter,price=100,sprite=frother,stat=appeal,stat_value=1.0,menu=cappuccino/latte,requires=espresso,description=adds espresso milk drinks to the menu
 ]])},
             --{img = 58, title = "restock", scroll_page = 8, children = {}},
             {img = 60, title = "floorplan", scroll_page = 4, children = string_multitable([[
-img=58,title=6x6 cafe,price=200,type=floorplan,planx=6,plany=6
+img=58,title=6x6 cafe,price=150,type=floorplan,planx=6,plany=6
 img=58,title=7x6 cafe,price=600,type=floorplan,planx=7,plany=6
 img=58,title=7x7 cafe,price=1100,type=floorplan,planx=7,plany=7
 img=58,title=8x7 cafe,price=2000,type=floorplan,planx=8,plany=7
@@ -122,7 +125,7 @@ end
 
 function get_seats(must_be_empty)
     local s = {}
-    local chairs = split"chair,couch1,couch2,couch3"
+    local chairs = split"chair,couch 1,couch 2,couch 3,chair2"
     for ent in all(ents) do
         if contains(chairs, ent.name) then
             if not must_be_empty or not ent.taken then
@@ -148,6 +151,12 @@ function get_sitting_spots()
     for c in all(get_counters(true)) do add(sits, c) end
     for c in all(get_seats(true)) do add(sits, c) end
     return sits
+end
+
+function is_ent_in_sell_spot(ent)
+    if ent.cost == nil then return false end
+    local r = ent:get_rect()
+    return r[2] > door.x - 4 and r[1] < door.x + 4 and r[3] <= door.y + 4
 end
 
 function has_ent(name)
@@ -176,9 +185,9 @@ state_game.start = function()
     
     description_t = 0
 
-    make_ent("table",OBJECT_SPRITES["table"], 51, 16, "moveable=true")
-    make_ent("chair",OBJECT_SPRITES["chair"], 52, 6, "moveable=true")
-    make_ent("bookcase", 30, 12, 6, "moveable=true")
+    make_ent("table",OBJECT_SPRITES["table"], 51, 16, "moveable=true,cost=20")
+    make_ent("chair",OBJECT_SPRITES["chair"], 52, 6, "moveable=true,cost=40")
+    --make_ent("bookcase", 30, 12, 6, "moveable=true")
     -- opt: string setup
     local rc1 = make_ent("counter", 47, 6, 44, "is_counter=true")
     --flap = make_ent(48, 18, 44)
@@ -210,7 +219,7 @@ state_game.start = function()
 
     player = make_player(31, 8)
 
-    money = 550
+    money = 50
     stars = 0
     selected_ent = nil
 
@@ -233,6 +242,7 @@ state_game.start = function()
     particle_stars = {}
     today_stats = string_table("customers=0,stars earned=0,sales=0,tips=0,total=0")
     today_stats_order = split("customers,stars earned,sales,tips,total")
+
 end
 
 function hint(s)
@@ -290,6 +300,15 @@ end
 
 state_game.update = function()
     
+    debug_symbol=""
+    if stat(30) then
+        debug_symbol = stat(31)    
+    end  
+
+    if debug_symbol == "l" then   
+        DEBUG_LAYERS = true
+    end
+
     door.interactable = false
     time += 0x0.0001
     if not cafe_open then
@@ -306,19 +325,19 @@ state_game.update = function()
         end
     end
 
+    --[[
     if daytime > 10 then
-        --end_day()
+        end_day()
     end
-
-    if cafe_open and activity.name != "phone" then
-        
-        daytime += 1
-        if daytime >= closing_ticks then
-            cafe_open = false
-        end
-        update_customers()        
-    end
+    ]]
     if activity.name != "phone" then
+        if cafe_open then
+            daytime += 1
+            if daytime >= closing_ticks then
+                cafe_open = false
+            end
+            update_customers()                    
+        end
         update_cats()
         for ent in all(ents) do
             ent:update()
@@ -344,21 +363,30 @@ state_game.update = function()
         activity.drop_valid = true
         if activity.counter_only then
             local counters = get_counters()
+            if activity.ent.cost then
+                add(counters, door)
+            end
             activity.selected_counter = (activity.selected_counter + dx + dy - 1) % #counters + 1
             local c = counters[activity.selected_counter]
-            e:move( c.x, c.y )
+            e:move( c.x, c.y + (c == door and 4 or 0) )
             e.height = c:get_total_height()
             if c.counter_item then c.counter_item.imm_offset = 5 end
             if btnp(B_CONFIRM) then
-                if c.counter_item then
-                    local other_item = c.counter_item
-                    c.counter_item = activity.ent
-                    activity = moving_activity(other_item, true)
-                else
-                    c.counter_item = activity.ent
+                if is_ent_in_sell_spot(activity.ent) then
+                    del(ents, activity.ent)
+                    money += activity.ent.cost
                     activity = play_activity()
+                else                 
+                    if c.counter_item then
+                        local other_item = c.counter_item
+                        c.counter_item = activity.ent
+                        activity = moving_activity(other_item, true)
+                        selected_ent = other_item
+                    else
+                        c.counter_item = activity.ent
+                        activity = play_activity()
+                    end
                 end
-                
             end            
         else
             e:adjust( dx * 2 , dy * 2 )
@@ -372,11 +400,17 @@ state_game.update = function()
                 end
             end
             if btnp(B_CONFIRM) then
-                if activity.drop_valid then
+                if is_ent_in_sell_spot(activity.ent) then
+                    del(ents, activity.ent)
+                    money += activity.ent.cost
                     activity = play_activity()
-                else
-                    activity.ent:shake()
-                    --hint("bad spot")
+                else 
+                    if activity.drop_valid then
+                        activity = play_activity()
+                    else
+                        activity.ent:shake()
+                        --hint("bad spot")
+                    end
                 end
             end            
         end
@@ -408,7 +442,6 @@ state_game.update = function()
                     end
                     --flap:move(flap.x, flap.y + dy * 12)
                     --blocker.y += dy * 12
-
                     activity = play_activity()
                     cafe_size = {item.planx, item.plany}
                 else
@@ -419,15 +452,17 @@ state_game.update = function()
                     money -= item.price
                     local e
                     if item.is_counter then
-                        e = make_counter(OBJECT_SPRITES[item.sprite], 25, 0, true)
+                        e = make_ent(item.title, OBJECT_SPRITES[item.sprite], door.x, door.y + 10, "is_counter=true")
                     else
-                        e = make_ent(item.title, OBJECT_SPRITES[item.sprite], 25, 0, "moveable=true")
+                        e = make_ent(item.title, OBJECT_SPRITES[item.sprite], door.x, door.y + 10, "moveable=true")
                     end
                     if item.stat then
                         stats[item.stat] += item.stat_value
                     end
                     e.hoppable = item.hoppable or true
                     activity = moving_activity(e)
+                    selected_ent = e
+                    e.cost = item.price
                 else
                     hint("not enough money")
                 end
@@ -443,6 +478,8 @@ state_game.update = function()
                         money -= item.price
                         local e = make_ent(item.title, OBJECT_SPRITES[item.sprite], 25, 0, "hoppable=false")
                         e.menu = split(item.menu,"/")
+                        e.cost = item.price
+                        selected_ent = e
                         if item.fn then _ENV[item.fn]() end
                         activity = moving_activity(e, true)
                     else

@@ -46,14 +46,15 @@ function make_customer()
     else
         e.pal[7] = rnd(split"7,6,9,10")
     end
-    e.hair = rnd(split"76,78,80,82")
+    e.hair = rnd({{76,113,77},{78,114,79},{80,113,81},{82,115,83}}) --rnd(split"76,78,80,82")
     e.hc = rnd(split"10,1,2,2,4,4,9,6")
     if e.pal[15] == 2 or e.pal[15] == 4 then
         e.hc = 1--rnd(split"1,")
     end
     e.pal[4] = e.hc
     e.desires = generate_desires()
-    e.parts[2] = make_spritepart(e, e.hair, e.hair, e.hair + 1, 0, -2, 10)
+    e.parts[2] = make_spritepart(e, e.hair[1], e.hair[2], e.hair[3], 0, -2, 10)
+    --e.parts[2] = make_spritepart(e, 82,115,83, 0, -2, 10)
     e.cats_seen = {}
 
     local _move = e.move
@@ -114,13 +115,14 @@ function make_customer()
     end
     e.leave = function(self, bad_time)
         self:set_state("leave")
-        self:move(door.x - 4, door.y + 3)        
+        self:move(door.x - 4, door.y + 6)        
         if bad_time then
             self:set_status("\fc⁶:0014001c22000000")
             --stars = (stars * 0.95) \ 1
         end
     end
     e.update = function(self)
+        --self.dir = {1,0}
         self.height = 0
         if self.move_timer > 0 then self.move_timer -= 1 end
         if self.state == "entering" then
@@ -128,6 +130,7 @@ function make_customer()
                 self:enter_line()
             end
         elseif self.state == "queued" then
+            self.dir = {0, 1}
             if self.state_timer >= 300 and self.state_timer % 180 == 0 then
                 self:set_status("⁶:0000000049000000")
             end

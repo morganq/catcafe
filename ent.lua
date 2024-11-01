@@ -16,6 +16,9 @@ function make_spritepart(ent, spri1, spri2, spri3, xo, yo, ho)
             end
             return {s, hflip, SPRITE_META[s]}
         end,
+        can_rotate = function(self)
+            return (self.spri[1] != self.spri[2] or self.spri[1] != self.spri[3])
+        end,
         get_sprite = function(self)
             return self:get_vars()[1]
         end,
@@ -57,13 +60,11 @@ function make_ent(name, parts_def, x, y, extras)
         add(e.parts, make_spritepart(unpack(args)))
     end
     e.dir = {0,1}
-    populate_table(e, "moveable=false,interactable=false,blocks_placement=true,collides=true,shaking=0,height=0,imm_offset_x=0,imm_offset_y=0,imm_offset_h=0,hflip=false,hoppable=true")
+    populate_table(e, "moveable=false,interactable=false,blocks_placement=true,collides=true,shaking=0,height=0,imm_offset=0,hflip=false,hoppable=true")
     if extras then populate_table(e, extras) end
 
     e.update = function(self)
-        self.imm_offset_x = 0
-        self.imm_offset_y = 0
-        self.imm_offset_h = 0
+        self.imm_offset = 0
         if self == selected_ent then
             if self.interactable then
                 self.outline_color = 10
@@ -72,6 +73,9 @@ function make_ent(name, parts_def, x, y, extras)
                     self.outline_color = 8
                 else
                     self.outline_color = 7
+                end
+                if activity.name == "moving" and is_ent_in_sell_spot(self) then
+                    self.outline_color = 3
                 end
             end
         else
@@ -92,11 +96,18 @@ function make_ent(name, parts_def, x, y, extras)
     e.adjust = function(self, dx, dy)
         self:move(self.x + dx, self.y + dy)
         local x1, x2, y1, y2 = unpack(self:get_rect())
-        if x1 <= 0 or x2 >= cafe_size[1] * 12 + 1 or y1 <= -4 or y2 >= cafe_size[2] * 12 - 1 then
+        if x1 <= 0 or x2 >= cafe_size[1] * 12 + 1 or y1 <= -2 or y2 >= cafe_size[2] * 12 then
             self:move(self.x - dx, self.y - dy)
         end
     end    
     e.rotate = function(self)
+        local rotates = false
+        for part in all(self.parts) do 
+            if part:can_rotate() then
+                rotates = true
+            end
+        end
+        if not rotates then return end
         self.dir = {self.dir[2], -self.dir[1]}
         self:calculate_rect()
     end
@@ -123,7 +134,8 @@ function draw_ents()
         local slices = {}
         local sx, sy, sw, sh, ox, oy, cx, cy, cw, ch = unpack(meta)
         local h = 0
-        local eh = ent.height \ 1 + part.ho + ent.imm_offset_h \ 1
+        local eh = ent.height \ 1 + part.ho + ent.imm_offset \ 1
+        ox += ent.imm_offset \ 1
         local mh,th = part:get_manual_height(), part:get_top_height()
         
         ox += part.xo
@@ -138,7 +150,7 @@ function draw_ents()
             end
             slices[h + eh] = {{
                 sx, sy + iyo, sw, ih,
-                ent.x - sw / 2, ent.y - iho - oy + ch / 2 - eh,
+                ent.x - sw / 2 + ox, ent.y - iho - oy + ch / 2 - eh,
                 sw, ih,
                 hflip
             }, ent.pal, ent.outline_color, i == sh}
@@ -184,9 +196,19 @@ function draw_ents()
             --end
         end
         pal()
-        --flip() flip() flip()
+        if DEBUG_LAYERS == true then
+            print(s, (s % 8) * 8 - 20, -30 + (s \ 8) * 8, 8)
+            flip()
+            while not btn(5) do
+                _update_buttons()
+            end
+            while btn(5) do
+                _update_buttons()
+            end            
+            
+        end
     end
-    
+    DEBUG_LAYERS = false
     --[[
     for ent in all(ents) do
         --pset(ent.x, ent.y, 8)

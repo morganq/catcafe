@@ -44,6 +44,15 @@ zspr,39,57,-11
     
     zspr(33, cspx - 1, -16)
 
+    if activity.name == "moving" and not activity.counter_only then
+        clip(-cx, -cy, cspx, cspy)
+        fillp(0b0101111101011111.1)
+        local r = activity.ent:get_rect()
+        rectfill(r[1] - 4, r[3] - 4, r[2] + 5, r[4] + 5, 7)
+        fillp()
+        clip()
+    end
+
     draw_ents()
     for customer in all(customers) do
         if customer.status_timer > 0 then
@@ -81,14 +90,18 @@ zspr,39,57,-11
             fillp()
             ]]
         end
-    end
-
-    if selected_ent then
-        controls = {"move"}
-        if selected_ent.interactable then controls = {selected_ent.interact_text or "use"} end
+        if activity.ent.cost then
+            zspr(117, door.x - 9, door.y - 12 + (time \ 0x0.0010) % 2)
+        end
     end
 
     if activity.name == "play" then
+        if selected_ent then
+            controls = {"move"}
+            if selected_ent.interactable then controls = {selected_ent.interact_text or "use"} end
+        elseif player.nearest_cat then
+            controls = {"call " .. player.nearest_cat.name}
+        end
         controls[2] = "phone"
     end
 
@@ -180,10 +193,11 @@ clip,38,8,54,92
             if selected == i then
                 rectfill(0, y - 2, 53, y + th + 1, have_it and 6 or 10)
                 description = child.description
-            end            
-            if child.img then
-                local meta = SPRITE_META[ child.img ]
-                local x1, y1, w, h, dx, dy = meta[1], meta[2], meta[3], meta[4], 1, y
+            end          
+            local sprd = child.sspr and split(child.sspr, "/") or SPRITE_META[child.img]
+            if sprd then
+                local x1, y1, w, h = unpack(sprd)
+                local dx, dy = 1, y
                 if w < 10 then
                     dx += (10 - w) \ 2
                 else

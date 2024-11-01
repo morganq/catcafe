@@ -1,11 +1,7 @@
 function make_player(x, y)
     local p = make_ent("player", {{40,41,42,0,0}}, x, y, "hoppable=false")
-    p.update = function(self)
-        --self.height = sin(time / 0x0.002) * 4 + 4
-    end
     p.control = function(self)
-        local dx = -tonum(btn(0)) + tonum(btn(1))
-        local dy = -tonum(btn(2)) + tonum(btn(3))
+        local dx, dy = -tonum(btn(0)) + tonum(btn(1)), -tonum(btn(2)) + tonum(btn(3))
         if abs(dx) > 0 and abs(dy) > 0 then
             dx = dx * 0.707
             dy = dy * 0.707
@@ -38,7 +34,7 @@ function make_player(x, y)
         local pt = {self.dir[1] * 6 + self.x, self.dir[2] * 6 + self.y}
         selected_ent = nil
         for ent in all(ents) do
-            if ent.moveable or ent.interactable then
+            if not ent.taken and (ent.moveable or ent.interactable) then
                 if point_in_ent(pt[1], pt[2], ent) then
                     if btnp(B_CONFIRM) then
                         if ent.interactable then
@@ -52,18 +48,19 @@ function make_player(x, y)
                 end
             end
         end
-        if not selected_ent and btnp(B_CONFIRM) then
+        if not selected_ent then
             local nd, nc = 999, nil
             for cat in all(cats) do
                 local dx, dy = self.x - cat.x, self.y - cat.y
                 local d = sqrt(dx * dx + dy * dy)
-                if d < nd then
+                if d < 23 and d < nd then
                     nc = cat
                     nd = d
                 end
             end
-            if nc then
-                nc:walk_to(self.x + rnd(8) - 4, self.y + rnd(8) - 4)
+            self.nearest_cat = nc
+            if btnp(B_CONFIRM) and nc then
+                nc:walk_to(self.x + rnd(12) - 6, self.y + rnd(12) - 6)
             end
         end
     end
