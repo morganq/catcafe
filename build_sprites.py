@@ -97,8 +97,11 @@ def modify_cart(template, out, image_str, meta_str):
         fh.writelines([l + "\n" for l in lines])        
 
 if __name__ == "__main__":
+    #with Image.open("sheet_out.png") as im:
+    #    image_str = generate_gfx(im)
+    #    meta_str = generate_sprite_meta(im, "sheet_out.json")
     with Image.open("sheet.png") as im:
         image_str = generate_gfx(im)
-        meta_str = generate_sprite_meta(im, "sheet.json")
+        meta_str = generate_sprite_meta(im, "sheet.json")    
     modify_cart("catcafe_template.p8","catcafe.p8", image_str, meta_str)
     modify_cart("viewer_template.p8","viewer.p8", image_str, meta_str)

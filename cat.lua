@@ -54,8 +54,8 @@ function generate_cat_features(index, cat)
     t.pal[10] = t.eye_color
     t.pal[11] = t.portrait_iris_color
     t.pal[8] = t.portrait_pupil_color
-    t.pal[12] = t.portrait_border_color
-    if t.base_color == 0 or t.base_color == 1 then t.pal[1] = 0 end
+    t.outline_color = t.portrait_border_color
+    if t.base_color == 0 or t.base_color == 1 then t.outline_color = 0 end
     return t
 end
 
