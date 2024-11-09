@@ -1,11 +1,8 @@
-poke(0x5F2D, 0x1) -- mouse
+--poke(0x5F2D, 0x1) -- mouse
 
 --[[
 
 Goal: Get to 9x7
-
-
--- 7644
 
 ]]
 
@@ -23,25 +20,20 @@ Goal: Get to 9x7
    - elevated area with stairs
    - long table
 
- - didn't know how stars were acquired via cats
-  * gain star at the moment they interact with the cat
  - need clear goal
- - no time to do other things when making change all the time
- - no other gameplay but making change is tiring
-    1. treats for cats - moves them around, but maybe not mechanically clear?
-    2. play with cat - ?
-    3. talk to customer to get tip? - odd feeling
- - overpriced expansions
- - 
 
 ]]
 
 
 --[[ TODO
- - Make buying stuff use stats etc.
- - Customers use chairs
- - Make appliances
-
+ - auto register?
+ - make a plan for tutorialization
+ - teach:
+  - you own this cafe and you gotta make it a success
+  - it's a cat cafe - adopt a cat!
+  - use your phone to get furniture and appliances
+  - check the stats and try to improve your cafe
+  - you can interact with cats too
 ]]
 
 BILLS = {1, 5, 10, 20}
@@ -82,6 +74,7 @@ img=106,title=plant,type=buy_floor,sprite=plant1,price=8,description=plant,stat=
 ]])},
             {img = 57, title = "appliances", scroll_page = 4, children = string_multitable([[
 img=53,title=register,type=buy_counter,price=100,sprite=register
+img=127,title=auto-reg,type=autoreg,price=100,description=automatically run the register!
 img=84,title=drip machine,type=buy_counter,price=50,sprite=drip machine
 img=116,title=cream+sug,type=buy_counter,price=20,sprite=cream,stat=appeal,stat_value=0.25,description=self serve cream and sugar packets
 img=86,title=grinder,type=buy_counter,price=35,sprite=grinder,fn=action_buy_grinder,description=raises drip coffee price +$1
@@ -182,8 +175,11 @@ state_game.start = function()
         deli(nums, ni)
         add(cats_available, generate_cat_features(num))
     end
+
+    milestones = string_table("phoned=false,opened=false,closed=false")
     
     description_t = 0
+    autoreg_time = 0
 
     make_ent("table",OBJECT_SPRITES["table"], 51, 16, "moveable=true,cost=20")
     make_ent("chair",OBJECT_SPRITES["chair"], 52, 6, "moveable=true,cost=40")
@@ -219,7 +215,7 @@ state_game.start = function()
 
     player = make_player(31, 8)
 
-    money = 50
+    money = 250
     stars = 0
     selected_ent = nil
 
@@ -260,7 +256,25 @@ function add_money(n)
     bump_money = 10
 end
 
+function complete_change()
+    local c = customer_queue[1]
+    autoreg_time = 0
+    add_money(c.sale)
+            
+    local tip = 0
+    if c.order.tip then
+        tip = c.order.tip
+    end
+    today_stats["sales"] += c.sale - tip
+    today_stats["tips"] += tip
+    today_stats["total"] += c.sale
+    c:set_state("paid")
+    next_customer()
+    activity = play_activity()    
+end
+
 function end_day()
+    milestones["closed"] = true
     reporthints = split("hint: customers\ngive you a star for\neach cat they meet,hint: appliances\ncan expand your\nmenu and earn you\nmore money,hint: buying\nfurniture will\nattract more\ncustomers,hint: customers\nare more likely to\ntip if they meet\nsome cats")
     time = 0
     daytime = 0
@@ -299,29 +313,25 @@ function end_day()
 end
 
 state_game.update = function()
-    
-    debug_symbol=""
-    if stat(30) then
-        debug_symbol = stat(31)    
-    end  
-
-    if debug_symbol == "l" then   
-        DEBUG_LAYERS = true
-    end
-
     door.interactable = false
-    time += 0x0.0001
+    time = (time + 1) % 32767
     if not cafe_open then
-        if time > 0x0.0080 and daytime == 0 then
-            door.outline_color = (time % 0x0.002 < 0x0.001) and 10 or nil
+        if not milestones["opened"] and time > 60 and daytime == 0 then
+            door.outline_color = (time % 32 < 16) and 10 or nil
         end
         door.interactable = true
         if daytime == 0 then
             door.interact_text = "open cafe"
-            door.interact = function(self) cafe_open = true end
+            door.interact = function(self)
+                cafe_open = true
+                milestones["opened"] = true
+                time = 30
+            end
         else
             door.interact_text = "go home"
-            door.interact = function(self) end_day() end
+            door.interact = function(self)
+                end_day()
+            end
         end
     end
 
@@ -348,6 +358,13 @@ state_game.update = function()
         hints[1].time += 1
         if hints[1].time > 150 then
             deli(hints,1)
+        end
+    end
+
+    if activity.name != register and #customer_queue > 0 and autoreg then
+        autoreg_time += 1
+        if autoreg_time > 150 then
+            complete_change()
         end
     end
 
@@ -427,12 +444,17 @@ state_game.update = function()
         cursor[#cursor] = mid(selected + dy, 1, #tree.children)
         if btnp(B_CONFIRM) then
             local item = tree.children[selected]
-            if item.children then
-                add(cursor, 1)
-                activity.scroll = 0
-            elseif item.type == "floorplan" then
-                if item.price <= money then
-                    money -= item.price
+            if not item.price or money >= item.price then
+                money -= item.price and item.price or 0
+                if item.children then
+                    add(cursor, 1)
+                    activity.scroll = 0
+                elseif item.type == "autoreg" then
+                    autoreg = true
+                    register:set_spritepart(127)
+                    register.interact = nil
+                    activity = play_activity()
+                elseif item.type == "floorplan" then
                     local dx, dy = item.planx - cafe_size[1], item.plany - cafe_size[2]
                     for c in all(get_counters()) do
                         c:move(c.x, c.y + dy * 12)
@@ -444,12 +466,7 @@ state_game.update = function()
                     --blocker.y += dy * 12
                     activity = play_activity()
                     cafe_size = {item.planx, item.plany}
-                else
-                    hint("not enough money")
-                end                
-            elseif item.type == "buy_floor" then
-                if item.price <= money then
-                    money -= item.price
+                elseif item.type == "buy_floor" then
                     local e
                     if item.is_counter then
                         e = make_ent(item.title, OBJECT_SPRITES[item.sprite], door.x, door.y + 10, "is_counter=true")
@@ -463,40 +480,35 @@ state_game.update = function()
                     activity = moving_activity(e)
                     selected_ent = e
                     e.cost = item.price
-                else
-                    hint("not enough money")
-                end
-            elseif item.type == "buy_counter" then
-                if #get_counters(true) == 0 then
-                    hint("no counter space")
-                elseif has_ent(item.title) then
-                    hint("already owned")
-                elseif item.requires and not has_ent(item.requires) then
-                    hint(item.title .. " requires " .. item.requires)
-                else
-                    if item.price <= money then
-                        money -= item.price
+                elseif item.type == "buy_counter" then
+                    if #get_counters(true) == 0 then
+                        hint("no counter space")
+                    elseif has_ent(item.title) then
+                        hint("already owned")
+                    elseif item.requires and not has_ent(item.requires) then
+                        hint(item.title .. " requires " .. item.requires)
+                    else
                         local e = make_ent(item.title, OBJECT_SPRITES[item.sprite], 25, 0, "hoppable=false")
                         e.menu = split(item.menu,"/")
                         e.cost = item.price
                         selected_ent = e
                         if item.fn then _ENV[item.fn]() end
                         activity = moving_activity(e, true)
+                    end
+                elseif item.type == "adopt_cat" then
+                    if has_ent(item.title) then
+                        hint("already adopted " .. item.title .. "!")
+                    elseif #cats >= get_max_cats()\1 then
+                        hint("reached maximum cats")
                     else
-                        hint("not enough money")
+                        add(cats, make_cat(item.features.index, door.x - 3, door.y + 8))
+                        stats["appeal"] += 0.5
+                        activity = play_activity()
                     end
                 end
-            elseif item.type == "adopt_cat" then
-                if has_ent(item.title) then
-                    hint("already adopted " .. item.title .. "!")
-                elseif #cats >= get_max_cats()\1 then
-                    hint("reached maximum cats")
-                else
-                    add(cats, make_cat(item.features.index, door.x - 3, door.y + 8))
-                    stats["appeal"] += 0.5
-                    activity = play_activity()
-                end
-            end
+            else
+                hint("not enough money")
+            end                   
         end
         if btnp(B_BACK) then
             if #cursor == 1 then
@@ -518,18 +530,7 @@ state_game.update = function()
             bump_change = 4
         end
         if activity.change == 0 then
-            add_money(activity.sale)
-            
-            local tip = 0
-            if activity.customer.order.tip then
-                tip = activity.customer.order.tip
-            end
-            today_stats["sales"] += activity.sale - tip
-            today_stats["tips"] += tip
-            today_stats["total"] += activity.sale
-            activity.customer:set_state("paid")
-            next_customer()
-            activity = play_activity()
+            complete_change()
         elseif activity.change < 0 or #activity.bills > 10 then
             activity.change = activity.given - activity.sale
             activity.bills = {}

@@ -1,24 +1,41 @@
 function make_player(x, y)
-    local p = make_ent("player", {{40,41,42,0,0}}, x, y, "hoppable=false")
+    local p = make_ent("player", {{40,41,42,0,0}}, x, y, "hoppable=false,snack_time=0")
     p.control = function(self)
-        local dx, dy = -tonum(btn(0)) + tonum(btn(1)), -tonum(btn(2)) + tonum(btn(3))
-        if abs(dx) > 0 and abs(dy) > 0 then
-            dx = dx * 0.707
-            dy = dy * 0.707
-        end
-        self.x += dx * 1.5
-        self.y += dy * 1.5
 
-        if abs(dx) > 0 or abs(dy) > 0 then
-            if abs(dx) > abs(dy) then
-                self.dir = {(dx < 0) and -1 or 1, 0}
-            else
-                if dy > 0 then
-                    self.dir = {0,1}
-                else
-                    self.dir = {0,-1}
-                end
+        if self.snack_time > 0 then
+            self.snack_time -= 1
+            local s = (self.snack_time % 10 > 5) and 124 or 125
+            self:set_spritepart(s)
+            self.dir = {0,1}
+        else
+
+            local dx, dy = -tonum(btn(0)) + tonum(btn(1)), -tonum(btn(2)) + tonum(btn(3))
+            if abs(dx) > 0 and abs(dy) > 0 then
+                dx = dx * 0.707
+                dy = dy * 0.707
             end
+            self.x += dx * 1.5
+            self.y += dy * 1.5
+
+            if abs(dx) > 0 or abs(dy) > 0 then
+                if abs(dx) > abs(dy) then
+                    self.dir = {(dx < 0) and -1 or 1, 0}
+                else
+                    if dy > 0 then
+                        self.dir = {0,1}
+                    else
+                        self.dir = {0,-1}
+                    end
+                end
+                if time \ 4 % 2 == 0 then
+                    self:set_spritepart(118, (time \ 8 % 2 == 0) and 122 or 123, 120)
+                else
+                    self:set_spritepart(119, 41, 121)
+                end
+            else
+                self:set_spritepart(40, 41, 42)
+            end
+
         end
 
         for ent in all(ents) do
@@ -60,6 +77,7 @@ function make_player(x, y)
             end
             self.nearest_cat = nc
             if btnp(B_CONFIRM) and nc then
+                self.snack_time = 30
                 nc:walk_to(self.x + rnd(12) - 6, self.y + rnd(12) - 6)
             end
         end

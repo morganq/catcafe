@@ -191,13 +191,10 @@ cat_check_index = 1
 function update_customers()
     -- var
     if walkin_timer <= 0 and #customers < 5 and daytime < closing_ticks - 240 then
-        if rnd(1) < 0.1 then -- var
-            local c = make_customer()
-            add(customers, c)
-            local factor = (stats["appeal"] \ 1 / 4 + 0.75)
-            walkin_timer = (350 + rnd(300)) / factor \ 1
-            --walkin_timer = 90
-        end
+        local c = make_customer()
+        add(customers, c)
+        local factor = (stats["appeal"] \ 1 / 4 + 0.75)
+        walkin_timer = (350 + rnd(300)) / factor \ 1
     end
     walkin_timer -= 1
     for i = 1, #customers do

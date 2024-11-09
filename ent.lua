@@ -60,7 +60,7 @@ function make_ent(name, parts_def, x, y, extras)
         add(e.parts, make_spritepart(unpack(args)))
     end
     e.dir = {0,1}
-    populate_table(e, "moveable=false,interactable=false,blocks_placement=true,collides=true,shaking=0,height=0,imm_offset=0,hflip=false,hoppable=true")
+    populate_table(e, "moveable=false,interactable=false,blocks_placement=true,collides=true,shaking=0,height=0,imm_offset=0,hflip=false,hoppable=true,move_timer=0")
     if extras then populate_table(e, extras) end
 
     e.update = function(self)
@@ -82,8 +82,8 @@ function make_ent(name, parts_def, x, y, extras)
             self.outline_color = nil
         end
     end
-    e.set_spritepart = function(self, def, index)
-        self.parts[index or 1] = make_spritepart(self,def,def,def,0,0,0)
+    e.set_spritepart = function(self, def1, def2, def3, index)
+        self.parts[index or 1] = make_spritepart(self,def1,def2 or def1,def3 or def1,0,0,0)
         self:calculate_rect()
     end
     e.get_rect = function(self)
@@ -137,6 +137,7 @@ function draw_ents()
         local eh = ent.height \ 1 + part.ho + ent.imm_offset \ 1
         ox += ent.imm_offset \ 1
         local mh,th = part:get_manual_height(), part:get_top_height()
+        local move_params = nil
         
         ox += part.xo
         oy += part.yo  
@@ -148,12 +149,16 @@ function draw_ents()
                 iyo = 0
                 iho = sh
             end
-            slices[h + eh] = {{
+            local slice = {
                 sx, sy + iyo, sw, ih,
                 ent.x - sw / 2 + ox, ent.y - iho - oy + ch / 2 - eh,
                 sw, ih,
                 hflip
-            }, ent.pal, ent.outline_color, i == sh}
+            }
+            if ent.move_timer > 0 then
+                move_params = {ent.oldx - ent.x, ent.oldy - ent.y}
+            end            
+            slices[h + eh] = {slice, ent.pal, ent.outline_color, i == sh, move_params}
             --printh(i .. " / " .. h + eh .. " / " .. iyo .. ", " .. iho .. ", " .. ih)
             if h > mh then return slices end
             h += 1
@@ -172,7 +177,7 @@ function draw_ents()
     end
     for s = S_LOW, S_HIGH do
         for slice in all(slices[s]) do
-            r, cpal, oc, is_bottom = unpack(slice)
+            r, cpal, oc, is_bottom, mp = unpack(slice)
             if oc then
                 memset(0x5f01,oc,15)
                 for co in all({{-1,0},{1,0},{0,1}}) do
@@ -186,14 +191,18 @@ function draw_ents()
                 camera(camx, camy)
             end
             
-            --rectfill(r[5], r[6], r[5] + r[3] - 1, r[6] + r[4] - 1, 8)
-            --if time % 0x0.0020 > 0x0.001 then
-            --    
-            --else
-            --rectfill(r[5], r[6], r[5] + r[3] - 1, r[6] + r[4] - 1, s)
-                pal(cpal)
+            pal(cpal)
+            
+            if mp then
+                fillp(0b0101010101010101.11)
                 sspr(unpack(r))
-            --end
+                temp_camera(-mp[1], -mp[2], function()
+                    sspr(unpack(r))
+                end)
+                fillp()
+            else
+                sspr(unpack(r))
+            end
         end
         pal()
         if DEBUG_LAYERS == true then

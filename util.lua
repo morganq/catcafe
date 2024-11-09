@@ -22,14 +22,6 @@ function zspr(n, x, y, fx, fy, dw, dh)
 end
 
 function draw_paw(x, y, angle, size, color1, color2)
-    --[[
-    circfill(x + cos(angle) * size * 0.1, y + sin(angle) * size * 0.1, size*1.1, color1)
-    for i = -2, 1 do
-        local ta = angle + i * 0.125 + 0.0625
-        local cx, cy = cos(ta) * size + x, sin(ta) * size + y
-        circfill(cx, cy, size * 0.5, color1)
-    end
-    ]]
     for i = -2, 1 do
         local ta = angle + i * 0.125 + 0.0625
         local cx, cy = cos(ta) * size + x, sin(ta) * size + y
@@ -53,25 +45,41 @@ function center_print(s, x, y, color, bgcolor, outlinecolor, rounded)
                 rectfill(x - xo - 2, y, x + xo + 2, y + 4, bgcolor)
             end
 		end
-		if outlinecolor then
+		--[[if outlinecolor then
 			rect(x - xo - 2, y - 2, x + xo + 2, y + 6, outlinecolor)
-		end
+		end]]
 		print(s, x - xo, y, color)
 		y += 8
 	end
 end
 
+--8093
+function rprint(text, x, y, color)
+    print(text, x - print(text, 0, -100), y, color)
+end
+
+function temp_camera(dx, dy, fn)
+    local cx, cy = peek2(0x5f28), peek2(0x5f2a)
+    camera(cx + dx, cy + dy)
+    fn()
+    camera(cx, cy)
+end
+
 function draw_cash(num, x, y, selected)
     CASH_SPRS = {64, [5] = 65, [10] = 66, [20] = 67}
     local s = CASH_SPRS[num]
-    rectfill(x, y, x + 17, y + 36, 11)
-    rect(x, y, x + 17, y + 36, 3)
-    if selected then
-        rect(x-1, y-1, x + 18, y + 37, 10)
-    end
-    zspr(63, x + 4, y + 13)
-    zspr(s, x + 2, y + 35 - SPRITE_META[s][4])
-    zspr(s, x + 11, y + 2)
+    temp_camera(-x, -y, function()
+        sfn([[
+rectfill,0,0,17,36,11
+rect,0,0,17,36,3
+zspr,63,4,13
+]])
+        zspr(s,11,2)
+        zspr(s, 2, 35 - SPRITE_META[s][4])
+        if selected then
+            rect(-1, -1, 18, 37, 10)
+        end        
+    end)
 end
 
 function contains(lst, ele)

@@ -91,7 +91,7 @@ zspr,39,57,-11
             ]]
         end
         if activity.ent.cost then
-            zspr(117, door.x - 9, door.y - 12 + (time \ 0x0.0010) % 2)
+            zspr(117, door.x - 9, door.y - 12 + (time \ 16) % 2)
         end
     end
 
@@ -101,6 +101,7 @@ zspr,39,57,-11
             if selected_ent.interactable then controls = {selected_ent.interact_text or "use"} end
         elseif player.nearest_cat then
             controls = {"call " .. player.nearest_cat.name}
+            zspr(126, player.nearest_cat.x - 4, player.nearest_cat.y - 15)
         end
         controls[2] = "phone"
     end
@@ -121,7 +122,7 @@ zspr,39,57,-11
     print(stars, 119 - w, 6 - bump_stars \ 4, 1)
     bump_stars = max(bump_stars - 1, 0)
     for p in all(particle_stars) do
-        local t = (time - p.time) / 0x0.0020
+        local t = (time - p.time) / 32
         t = t ^ 3
         local px, py = (p.x - cx) * (1-t) + 120 * t, (p.y - cy) * (1-t) + 5 * t
         --print("\f9⁶:083e1c0814000000", px, py)
@@ -258,7 +259,7 @@ clip,38,8,54,92
         y = 72
         for item in all(order) do
             print(item[1], 4, y, 5)
-            print(item[2], 58 - print(item[2],0,-100), y, 1)
+            rprint(item[2], 58, y, 1)
             y -= 7
         end
 
@@ -277,8 +278,8 @@ print,change,2,109,1
             draw_cash(BILLS[i], 24 + i * 21, 85, activity.selected_bill == i)
         end
         local sale, given, change = activity.sale, "+" .. activity.given, activity.change
-        print(sale, 43 - print(sale, 0, -100), 91, 1)
-        print(given, 43 - print(given, 0, -100), 99, 3)
+        rprint(sale, 43, 91, 1)
+        rprint(given, 43, 99, 3)
 
         local w = print(change, 0, -100)
         if bump_change > 0 then
@@ -309,8 +310,10 @@ print,change,2,109,1
 
     if description then
         --center_print(description, 64, 111, 1, 7)
-        rectfill(0, 109, 127, 119, 6)
-        rectfill(0, 110, 127, 118, 7)
+        sfn([[
+rectfill,0,109,127,119,6
+rectfill,0,110,127,118,7
+]])
         local w = print(description,0,-100)
         if w > 125 then
             local w2 = (w - 125) + 16
@@ -323,8 +326,8 @@ print,change,2,109,1
         description_t += 1
     end
 
-    if time < 0x0.0010 then
-        fillp(0b0.1 + (0b1000000000000000 >> (time \ 0x0.0001)))
+    if time < 16 then
+        fillp(0b0.1 + (0b1000000000000000 >> time))
         rectfill(0,0,127,127,1)
     end
     fillp()
