@@ -1,19 +1,35 @@
 --[[ Save Data
-0: money
-1: stars
-2 - 18: 16 cat ids
-19 - 51: 32 objects
+money
+stars
+16 cat ids
+32 objects:
     4 bytes per object
     byte 1: object id
     byte 2: x
     byte 3: y
-    byte 4: ??
-52-63: ??
+    byte 4: rotation
+autoreg
 ]]
 
---[[ TODO 
-rotating floor objects
-]]
+function save()
+
+end
+
+function load()
+    money, stars = peek2(0x5e00), peek2(0x5e02)
+    for i = 0,15 do
+        local cid = peek(0x5e04 + i)
+        if cid > 0 then
+            add(cats, make_cat(cid, door.x - 3, door.y + 8))
+        end
+    end
+    -- 0x5e14
+    for i = 0,128,4 do
+        local oid, x, y, rot = peek(0x5e14 + i), peek(0x5e14 + i + 1), peek(0x5e14 + i + 2), peek(0x5e14 + i + 3)
+    end
+    -- 0x5e94
+    autoreg = peek(0x5e94)
+end
 
 poke(0X5F5C, 8)
 poke(0X5F5D, 2)

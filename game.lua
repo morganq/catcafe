@@ -221,7 +221,6 @@ state_game.start = function()
 
     activity = play_activity()
     stats = {max_cats = 1.0, appeal = 1.5}
-    stock = {beans = 100, pastries = 0, ingredients = 0, catfood = 100}
 
     init_customers()
     cats = {}
@@ -238,7 +237,6 @@ state_game.start = function()
     particle_stars = {}
     today_stats = string_table("customers=0,stars earned=0,sales=0,tips=0,total=0")
     today_stats_order = split("customers,stars earned,sales,tips,total")
-
 end
 
 function hint(s)
@@ -278,6 +276,7 @@ function end_day()
     reporthints = split("hint: customers\ngive you a star for\neach cat they meet,hint: appliances\ncan expand your\nmenu and earn you\nmore money,hint: buying\nfurniture will\nattract more\ncustomers,hint: customers\nare more likely to\ntip if they meet\nsome cats")
     time = 0
     daytime = 0
+    save()
     for i = 1, 400 do
         --fillp(0b1111000011110000.1)
         --fillp(0b1100100100110110.1)
@@ -425,8 +424,7 @@ state_game.update = function()
                     if activity.drop_valid then
                         activity = play_activity()
                     else
-                        activity.ent:shake()
-                        --hint("bad spot")
+                        -- sfx
                     end
                 end
             end            
@@ -468,11 +466,11 @@ state_game.update = function()
                     cafe_size = {item.planx, item.plany}
                 elseif item.type == "buy_floor" then
                     local e
+                    local s = "moveable=true"
                     if item.is_counter then
-                        e = make_ent(item.title, OBJECT_SPRITES[item.sprite], door.x, door.y + 10, "is_counter=true")
-                    else
-                        e = make_ent(item.title, OBJECT_SPRITES[item.sprite], door.x, door.y + 10, "moveable=true")
+                        s = "is_counter=true"
                     end
+                    e = make_ent(item.title, OBJECT_SPRITES[item.sprite], door.x, door.y + 10, s)
                     if item.stat then
                         stats[item.stat] += item.stat_value
                     end
@@ -517,8 +515,6 @@ state_game.update = function()
                 deli(cursor, #cursor)
             end
         end       
-        
-        
 
     elseif activity.name == "register" then
         local dx = tonum(btnp(1)) - tonum(btnp(0))

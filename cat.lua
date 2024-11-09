@@ -67,7 +67,7 @@ function make_cat(index, x, y)
     
     generate_cat_features(index, e)
     
-    printh("cat: " .. e.name .. "\nbase: " .. e.base_color .. "\neye: " .. e.eye_color .. "\nsit: " .. e.prop_sit .. "\nspeed: " .. e.prop_speed .. "\nannoying: " .. e.prop_annoying .. "\nactive: " .. e.prop_active .. "\nrun: " .. e.prop_run)
+    --printh("cat: " .. e.name .. "\nbase: " .. e.base_color .. "\neye: " .. e.eye_color .. "\nsit: " .. e.prop_sit .. "\nspeed: " .. e.prop_speed .. "\nannoying: " .. e.prop_annoying .. "\nactive: " .. e.prop_active .. "\nrun: " .. e.prop_run)
 
     e.set_state = function(self, state)
         self.state = state
@@ -82,8 +82,7 @@ function make_cat(index, x, y)
             local spots = get_sitting_spots()
             if #spots > 0 and rnd() < e.prop_annoying then
                 local c = rnd(spots)
-                local ss = {c.x, c.y}
-                self:walk_to(ss[1], ss[2])
+                self:walk_to(c.x, c.y)
             else
                 self:walk_to((rnd(cafe_size[1] - 1) + 0.5) * 12, (rnd(cafe_size[2] - 1) + 0.5) * 12)
             end
@@ -118,7 +117,7 @@ function make_cat(index, x, y)
             end            
         elseif self.state == "walking" then
             local dx, dy = self.walk_target[1] - self.x, self.walk_target[2] - self.y
-            if dx < 0 then self.dir = {-1, 0} else self.dir = {1, 0} end
+            self.dir = {sgn(dx), 0}
             local d = sqrt(dx * dx + dy * dy)
             local boost = (self.boost_time > 0) and 2 or 1
             local delta = {dx / d * self.prop_speed * boost, dy / d * self.prop_speed * boost}
@@ -147,7 +146,6 @@ function make_cat(index, x, y)
                                 else
                                     self.walk_target[1] = self.x + sgn(c[1]) * 8
                                     self.walk_target[2] = self.y + sgn(c[2]) * 8
-                                    printh("PUSH AWAY")
                                 end
                                 self:move(self.x + c[1], self.y + c[2])
                             else 
@@ -166,7 +164,7 @@ function make_cat(index, x, y)
                 end
                 if d < 3 then
                     self:pick_random_state()
-                end                
+                end
             end
         end
     end
