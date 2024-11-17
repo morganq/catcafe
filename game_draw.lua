@@ -44,7 +44,7 @@ zspr,39,57,-11
     
     zspr(33, cspx - 1, -16)
 
-    if activity.name == "moving" and not activity.counter_only then
+    if activity.name == "moving" then
         clip(-cx, -cy, cspx, cspy)
         fillp(0b0101111101011111.1)
         local r = activity.ent:get_rect()
@@ -61,35 +61,26 @@ zspr,39,57,-11
     end
 
     if activity.name == "moving" then
-        if activity.counter_only then
-            local counters = get_counters()
-            for c in all(counters) do
-                local x,y = c.x, c.y
-                y -= c:get_total_height()
-                rect(x - 1, y - 1, x + 1, y + 1, 7)
+        controls = {"place", "rotate"}
+        --[[
+        fillp(0b0101111101011111.1)
+        local x1, x2, y1, y2 = activity.ent:get_rect()
+        local ax1, ay1, ax2, ay2 = max(x1 - 8, 0), max(y1 - 8, 0), min(x2 + 8, cspx), min(y2 + 8, cspy)
+        local bx1, by1, bx2, by2 = max(x1 - 4, 0), max(y1 - 4, 0), min(x2 + 4, cspx), min(y2 + 4, cspy)
+        clip(-cx + ax1, -cy + ay1, ax2-ax1, ay2-ay1)
+        rectfill(0, 0, 127, 127, 15)
+        clip(-cx + bx1, -cy + by1, bx2-bx1, by2-by1)
+        rectfill(0, 0, 127, 127, 7)     
+        clip(-cx + ax1, -cy + ay1, ax2-ax1, ay2-ay1)   
+        for ent in all(ents) do
+            if ent.blocks_placement and ent != activity.ent then
+                local r = pack(ent:get_rect())
+                rectfill(r[1], r[3], r[2], r[4], 9)
             end
-        else
-            controls = {"place", "rotate"}
-            --[[
-            fillp(0b0101111101011111.1)
-            local x1, x2, y1, y2 = activity.ent:get_rect()
-            local ax1, ay1, ax2, ay2 = max(x1 - 8, 0), max(y1 - 8, 0), min(x2 + 8, cspx), min(y2 + 8, cspy)
-            local bx1, by1, bx2, by2 = max(x1 - 4, 0), max(y1 - 4, 0), min(x2 + 4, cspx), min(y2 + 4, cspy)
-            clip(-cx + ax1, -cy + ay1, ax2-ax1, ay2-ay1)
-            rectfill(0, 0, 127, 127, 15)
-            clip(-cx + bx1, -cy + by1, bx2-bx1, by2-by1)
-            rectfill(0, 0, 127, 127, 7)     
-            clip(-cx + ax1, -cy + ay1, ax2-ax1, ay2-ay1)   
-            for ent in all(ents) do
-                if ent.blocks_placement and ent != activity.ent then
-                    local r = pack(ent:get_rect())
-                    rectfill(r[1], r[3], r[2], r[4], 9)
-                end
-            end
-            clip()
-            fillp()
-            ]]
         end
+        clip()
+        fillp()
+        ]]
         if activity.ent.cost then
             zspr(117, door.x - 9, door.y - 12 + (time \ 16) % 2)
         end
@@ -97,13 +88,13 @@ zspr,39,57,-11
 
     if activity.name == "play" then
         if selected_ent then
-            controls = {"move"}
-            if selected_ent.interactable then controls = {selected_ent.interact_text or "use"} end
+            controls[2] = "move"
+            if selected_ent.interact then controls[2] = selected_ent.interact_text or "use" end
         elseif player.nearest_cat then
-            controls = {"call " .. player.nearest_cat.name}
-            zspr(126, player.nearest_cat.x - 4, player.nearest_cat.y - 15)
+            controls[2] = "call " .. player.nearest_cat.name
+            zspr(126, player.nearest_cat.x - 4, player.nearest_cat.y - player.nearest_cat.height - 15)
         end
-        controls[2] = "phone"
+        controls[1] = "phone"
     end
 
     -- UI camera
@@ -243,23 +234,30 @@ clip,38,8,54,92
         camera()
     elseif activity.name == "register" then
         controls = {"pick"}
+        local customer = activity.customer
         local o = 0
         if #activity.bills > 5 then o = 2 end        
         for i = 1, #activity.bills do
             draw_cash(activity.bills[i], 72 + i * (5 - o), 65)
         end
 
-        local order = activity.customer.order
+        local order = customer.order
         local ty = 76 - 7 * #order
-        rect(1, ty, 61, 80, 6)
-        rectfill(2, ty, 60, 80, 7)
+        rect(1, ty, 63, 80, 6)
+        rectfill(2, ty, 62, 80, 7)
         for i = 0, 6 do
             zspr(70, 1 + 9 * i, ty - 3)
         end
         y = 72
         for item in all(order) do
             print(item[1], 4, y, 5)
-            rprint(item[2], 58, y, 1)
+            if item[1] == "tip" and time % 20 > 10 then
+                zspr(130, 61, y - 5)
+                if item[3] then
+                    zspr(130, 64, y - 5)
+                end
+            end
+            rprint(item[2], 60, y, 1)
             y -= 7
         end
 
@@ -277,7 +275,7 @@ print,change,2,109,1
         for i = 1, 4 do
             draw_cash(BILLS[i], 24 + i * 21, 85, activity.selected_bill == i)
         end
-        local sale, given, change = activity.sale, "+" .. activity.given, activity.change
+        local sale, given, change = customer.sale, "+" .. activity.given, activity.change
         rprint(sale, 43, 91, 1)
         rprint(given, 43, 99, 3)
 
@@ -293,11 +291,11 @@ print,change,2,109,1
     
     local o = 3
     if controls[1] then
-        zspr(73, 3, 120)
+        zspr(ZS_CONFIRM, 3, 120)
         o = print(controls[1], 12, 121, 0) + 8
     end
     if controls[2] then
-        zspr(74, o, 120)
+        zspr(ZS_BACK, o, 120)
         print(controls[2], o + 9, 121, 0)        
     end
 

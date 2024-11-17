@@ -23,19 +23,22 @@ function generate_desires()
         else
             add(desires, "drip coffee")
         end
-        if rnd() < ((daytime > BREAKFAST_END) and 0.2 or 0) + 0.2 then
+        if rnd() < ((daytime > BREAKFAST_END) and 0.1 or 0) + 0.15 then
             add(desires, "savory pastry")
         end
-        if rnd() < ((daytime <= BREAKFAST_END) and 0.3 or 0) + 0.1 then
+        if rnd() < ((daytime <= BREAKFAST_END) and 0.2 or 0) + 0.1 then
             add(desires, "sweet pastry")
         end
+        if rnd() < ((daytime <= BREAKFAST_END) and 0 or 0.2) then
+            add(desires, "sandwich")
+        end        
     end
     return desires
 end
 
 function make_customer()
     local e = make_ent("customer", OBJECT_SPRITES.customer, door.x + 2, door.y + 8)
-    populate_table(e, "state=entering,state_timer=0,total_time=0,move_timer=10,oldx=0,oldy=-999,is_customer=true,status_timer=0")
+    populate_table(e, "state=entering,state_timer=0,total_time=0,move_timer=10,oldx=0,oldy=-999,is_customer=true,status_timer=0,given=0,change=0")
     today_stats["customers"] += 1
     e.pal = split(rnd(CUST_PALS))
     e.pal[12] = rnd(split"1,2,3,4,5,12")
@@ -89,26 +92,6 @@ function make_customer()
                     self.sale += prices[desire]
                 end
             end
-            if tip then
-                if rnd() < #self.cats_seen * 0.2 then
-                    local tip_amt = (rnd(self.sale) + 1) \ 1
-                    add(self.order, {"tip", tip_amt})
-                    self.sale += tip_amt
-                end
-            end
-            
-            local rn = rnd()
-            if rn < 0.1 then
-                self.given = ((self.sale - 0.5) \ 5 + 1) * 5
-            elseif rn < 0.3 then
-                self.given = ((self.sale - 0.5) \ 10 + 1) * 10
-            elseif rn < 0.8 then
-                self.given = ((self.sale - 0.5) \ 20 + 1) * 20
-            elseif rn < 0.9 then
-                self.given = ((self.sale - 0.5) \ 50 + 1) * 50
-            else
-                self.given = ((self.sale - 0.5) \ 100 + 1) * 100
-            end
         else
             self:leave(true)
         end        
@@ -127,7 +110,7 @@ function make_customer()
         if self.move_timer > 0 then self.move_timer -= 1 end
         if self.state == "entering" then
             if self.state_timer > 60 then
-                self:enter_line()
+                self:enter_line(true)
             end
         elseif self.state == "queued" then
             self.dir = {0, 1}
@@ -147,11 +130,10 @@ function make_customer()
         elseif self.state == "seated" then
             self.height = 2
             if self.state_timer > 600 then
-                if rnd() < 0.5 then
-                    self.seat.taken = false
+                self.seat.taken = false
+                if self.total_time >= 1200 or rnd() < 0.35 then
                     self:leave()
                 else
-                    self.seat.taken = false
                     self.desires = generate_desires()
                     self:enter_line(true)
                 end
@@ -165,7 +147,7 @@ function make_customer()
                 local seats = get_seats(true)
                 if #seats > 0 and rnd() < 0.75 and daytime < closing_ticks - 120 then
                     self.seat = rnd(seats)
-                    self.seat.taken = true
+                    self.seat.taken = self
                     self:move(self.seat.x, self.seat.y + self.seat.dir[2] * 2)
                     self.dir = self.seat.dir
                     self:set_state("seated")
@@ -184,7 +166,7 @@ end
 function init_customers()
     customer_queue = {}
     customers = {}
-    walkin_timer = 0
+    walkin_timer = 30
 end
 
 cat_check_index = 1
@@ -200,6 +182,7 @@ function update_customers()
     for i = 1, #customers do
         local c = customers[i]
         c.state_timer += 1
+        c.total_time += 1
         c.status_timer = max(c.status_timer - 1, 0)
         if i == cat_check_index then
             for cat in all(cats) do

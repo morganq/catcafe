@@ -1,14 +1,11 @@
 pico-8 cartridge // http://www.pico-8.com
 version 42
 __lua__
--- viewer
+-- mem
 -- by morganquirk
 
 cartdata("catcafe_0")
 
--- sprite_meta
-
-#include util.lua
-#include viewer.lua
-
--- gfx
+for i = 0, 0xff do
+    printh(tostr(i,1) .. ": " .. peek(0x5e00 + i))
+end

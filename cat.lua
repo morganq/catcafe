@@ -12,7 +12,6 @@ CAT_EYES = {
 
 CAT_SHADOWS = split"0,0,1,X,2,X,5,X,X,4,9"
 
---200ish tokens
 function generate_cat_features(index, cat)
     local t = cat or {}
     t.name = CAT_NAMES[index]
@@ -60,10 +59,10 @@ function generate_cat_features(index, cat)
     return t
 end
 
---659 tokens
-function make_cat(index, x, y)
+function make_cat(index)
+    local x, y = rnd(cafe_size[1] * 11) + 6, rnd(cafe_size[2] * 11) + 6
     local e = make_ent("cat", 1, x, y)
-    populate_table(e, "state=sitting,state_timer=0,hopping_up=0,hop_time=0,debug_hitbox=false,collides=true,sit_time=0,boost_time=0")
+    populate_table(e, "state=sitting,state_timer=0,hopping_up=0,hop_time=0,hoppable=false,debug_hitbox=false,collides=true,sit_time=0,boost_time=0,is_cat=true")
     
     generate_cat_features(index, e)
     
@@ -116,11 +115,10 @@ function make_cat(index, x, y)
                 self:pick_random_state()
             end            
         elseif self.state == "walking" then
-            local dx, dy = self.walk_target[1] - self.x, self.walk_target[2] - self.y
+            local dx, dy, d, nx, ny = dxdyd(self.x, self.y, self.walk_target[1], self.walk_target[2])
             self.dir = {sgn(dx), 0}
-            local d = sqrt(dx * dx + dy * dy)
             local boost = (self.boost_time > 0) and 2 or 1
-            local delta = {dx / d * self.prop_speed * boost, dy / d * self.prop_speed * boost}
+            local delta = {nx * self.prop_speed * boost, ny * self.prop_speed * boost}
             if self.hopping_up != self.height then
                 self.hop_time += 1
                 if self.height > self.hopping_up then
@@ -159,6 +157,13 @@ function make_cat(index, x, y)
                                 self.hopping_up = max(self.hopping_up, h)
                                 self.hop_time = 0
                             end
+                        else
+                            if ent.is_cat then
+                                local dx, dy, d, nx, ny = dxdyd(self.x, self.y, ent.x, ent.y)
+                                if d < 16 and rnd() < 0.1 then
+                                    self.walk_target = {self.x - nx * 5, self.y - ny * 5}
+                                end
+                            end
                         end
                     end
                 end
@@ -169,6 +174,8 @@ function make_cat(index, x, y)
         end
     end
     --e:walk_to(20, 55)
+    stats["appeal"] += 0.5
+    e:walk_to(rnd(cafe_size[1] * 11) + 6, rnd(cafe_size[2] * 11) + 6)
     return e
 end
 

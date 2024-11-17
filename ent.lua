@@ -49,7 +49,7 @@ function make_spritepart(ent, spri1, spri2, spri3, xo, yo, ho)
 end
 
 function make_ent(name, parts_def, x, y, extras)
-    local e = {x=x, y=y, name=name, pal=split"1,2,3,4,5,6,7,8,9,10,11,12,13,14,15"}
+    local e = {x=x, y=y, name=name, pal=split"1,2,3,4,5,6,7,8,9,10,11,12,13,14,15", dir = {0,1}}
     e.parts = {}
     if type(parts_def) == "number" then
         parts_def = {{parts_def, parts_def, parts_def, 0, 0, 0}}
@@ -59,14 +59,13 @@ function make_ent(name, parts_def, x, y, extras)
         add(args, e, 1)
         add(e.parts, make_spritepart(unpack(args)))
     end
-    e.dir = {0,1}
-    populate_table(e, "moveable=false,interactable=false,blocks_placement=true,collides=true,shaking=0,height=0,imm_offset=0,hflip=false,hoppable=true,move_timer=0")
+    populate_table(e, "moveable=false,blocks_placement=true,collides=true,shaking=0,height=0,imm_offset=0,hflip=false,hoppable=true,move_timer=0,rot=1")
     if extras then populate_table(e, extras) end
 
     e.update = function(self)
         self.imm_offset = 0
         if self == selected_ent then
-            if self.interactable then
+            if self.interact then
                 self.outline_color = 10
             else
                 if activity.name == "moving" and not activity.drop_valid then
@@ -83,7 +82,7 @@ function make_ent(name, parts_def, x, y, extras)
         end
     end
     e.set_spritepart = function(self, def1, def2, def3, index)
-        self.parts[index or 1] = make_spritepart(self,def1,def2 or def1,def3 or def1,0,0,0)
+        self.parts[index or 1] = make_spritepart(self,def1,def2 or def1,def3 or def1,0,0,self.parts[index or 1].ho)
         self:calculate_rect()
     end
     e.get_rect = function(self)
@@ -108,6 +107,7 @@ function make_ent(name, parts_def, x, y, extras)
             end
         end
         if not rotates then return end
+        self.rot = self.rot % 4 + 1
         self.dir = {self.dir[2], -self.dir[1]}
         self:calculate_rect()
     end

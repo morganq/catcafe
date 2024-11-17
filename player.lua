@@ -51,10 +51,10 @@ function make_player(x, y)
         local pt = {self.dir[1] * 6 + self.x, self.dir[2] * 6 + self.y}
         selected_ent = nil
         for ent in all(ents) do
-            if not ent.taken and (ent.moveable or ent.interactable) then
+            if not ent.taken and (ent.moveable or ent.interact) then
                 if point_in_ent(pt[1], pt[2], ent) then
-                    if btnp(B_CONFIRM) then
-                        if ent.interactable then
+                    if btnp(B_BACK) then
+                        if ent.interact then
                             ent:interact()
                         else
                             activity = moving_activity(ent)
@@ -68,15 +68,14 @@ function make_player(x, y)
         if not selected_ent then
             local nd, nc = 999, nil
             for cat in all(cats) do
-                local dx, dy = self.x - cat.x, self.y - cat.y
-                local d = sqrt(dx * dx + dy * dy)
+                local dx, dy, d = dxdyd(self.x, self.y, cat.x, cat.y)
                 if d < 23 and d < nd then
                     nc = cat
                     nd = d
                 end
             end
             self.nearest_cat = nc
-            if btnp(B_CONFIRM) and nc then
+            if btnp(B_BACK) and nc then
                 self.snack_time = 30
                 nc:walk_to(self.x + rnd(12) - 6, self.y + rnd(12) - 6)
             end

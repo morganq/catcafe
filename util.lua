@@ -135,3 +135,9 @@ function sfn(s)
         end
     end
 end
+
+function dxdyd(x1, y1, x2, y2)
+    local dx, dy = x2 - x1, y2 - y1
+    local d = sqrt(dx * dx + dy * dy)
+    return dx, dy, d, dx / d, dy / d
+end
