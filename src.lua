@@ -36,7 +36,7 @@ function save_game()
     end
     poke(0x5e95, autoreg and 1 or 0)
     poke4(0x5e96, seed)
-    poke(0x5ea0, )
+    -- poke(0x5ea0, ) -- fix
     for i = 1, 30 do
 sfn([[
 rectfill,0,59,127,69,0
