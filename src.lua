@@ -11,6 +11,14 @@ stars
 autoreg
 ]]
 
+--[[
+Playtest
+day 1: 35?
+day 2: 90
+day 3: 180
+
+]]
+
 function save_game()
     memset(0x5e00,0,0xff) -- reset save
     poke (0x5e00, day_num)
@@ -28,6 +36,7 @@ function save_game()
     end
     poke(0x5e95, autoreg and 1 or 0)
     poke4(0x5e96, seed)
+    poke(0x5ea0, )
     for i = 1, 30 do
 sfn([[
 rectfill,0,59,127,69,0
@@ -65,28 +74,3 @@ poke(0X5F5D, 2)
 
 --B_CONFIRM, B_BACK, ZS_CONFIRM, ZS_BACK = 4, 5, 74, 73
 B_CONFIRM, B_BACK, ZS_CONFIRM, ZS_BACK = 5, 4, 73, 74
-
-function _init()
-    set_state(state_game)
-    menuitem(2 | 0x300,"delete save data", function()
-        menuitem(2 | 0x300, "really?", function()
-            memset(0x5e00,0,0xff)
-            run()
-        end)
-        return true
-     end)
-end
-
-function set_state(s, args)
-    current_state = s
-    s.start(args)
-end
-
-function _update()
-    current_state.update()
-end
-
-function _draw()
-    current_state.draw()
-    pal(split"130,132,3,4,134,6,7,8,9,10,11,140,143,14,15,0",1)
-end

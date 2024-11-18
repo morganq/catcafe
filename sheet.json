@@ -155,7 +155,8 @@
    { "name": "Slice 129", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 103, "y": 118, "w": 5, "h": 5 } }] },
    { "name": "Slice 130", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 38, "y": 116, "w": 7, "h": 9 } }] },
    { "name": "Slice 131", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 40, "y": 108, "w": 8, "h": 8 } }] },
-   { "name": "Slice 132", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 46, "y": 62, "w": 9, "h": 12 } }] }
+   { "name": "Slice 132", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 46, "y": 62, "w": 9, "h": 12 } }] },
+   { "name": "Slice 133", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 66, "y": 78, "w": 15, "h": 15 } }] }
   ]
  }
 }

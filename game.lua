@@ -2,9 +2,38 @@
 
 --[[
 
+-- floor plan star requirements??
+-- background
+-- check if tip is fixed
+
+
 Goal: Get to 9x7
 
 ]]
+
+
+
+-- Is it diagonal?
+if abs(dx) != 0 and abs(dy) != 0 then
+    -- Get the subpixel position
+    xmod = x % 1
+    ymod = y % 1
+    
+    -- Set up the line to project onto, based on if this is the up-left diagonal or the up-right diagonal
+    local diagonal = {.707, -.707}
+    if sgn(dx) == sgn(dy) then
+        diagonal = {.707, .707}
+    end
+    -- Use dot product to project the position onto the diagonal line.
+    local dot_product = xmod * diagonal[1] + ymod * diagonal[2]
+    xmod = dot_product * diagonal[1]
+    ymod = dot_product * diagonal[2]
+
+    -- Adjust the actual position
+    x = x \ 1 + xmod
+    y = y \ 1 + ymod
+end
+
 
 --[[ Feedback
 
@@ -139,8 +168,15 @@ function get_max_cats()
     return min(stats["max_cats"] + n, 7)
 end
 
-state_game = {}
-state_game.start = function()
+
+_init = function()
+    menuitem(2 | 0x300,"delete save data", function()
+        menuitem(2 | 0x300, "really?", function()
+            memset(0x5e00,0,0xff)
+            run()
+        end)
+        return true
+    end)
     cafe_size = {6,5}
     ents = {}
     description_t = 0
@@ -285,6 +321,7 @@ function determine_tip()
             local is_super_tip = rnd() < super_tip_chance
             tip_amt = is_super_tip and c.sale * 3 or c.sale
             c.sale += tip_amt
+            o.tip = tip_amt
             add(o, {"tip", tip_amt, is_super_tip})
         end
 
@@ -352,8 +389,7 @@ line,30,19,97,19,1
     save_game()
 end
 
-state_game.update = function()
-    --save_game()
+_update = function()
     time = (time + 1) % 32767
     if not cafe_open then
         if daytime == 0 then

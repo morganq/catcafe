@@ -1,16 +1,19 @@
---1441 tokens
-state_game.draw = function()
+_draw = function()
     local controls = {}
     local description = nil
     cls(7)
 
-    for i = 0, 5 do
-        for j = 0, 5 do
-            local x = j * 26 + 3 + (i % 2 ) * 8
-            local y = i * 30 + 3 + j * 2
-            local angle = i * 1.3103 + j * 0.73
-            draw_paw(x, y, angle, sin(i / 7) * 2.65 + 9.5, 7, 6)
+    if cafe_open then
+        for i = -1, 6 do
+            for j = -2, 5 do
+                zspr(133, j * 26 - 8 + i % 2 * 13, i * 26 - 6)
+            end
         end
+    else
+        --fillp(0b1110110110110111.1)
+        fillp(0b1111110111111111.1)
+        rectfill(0,0,127,127,6)
+        fillp()
     end
 
     -- World camera
@@ -329,4 +332,5 @@ rectfill,0,110,127,118,7
         rectfill(0,0,127,127,1)
     end
     fillp()
+    pal(split"130,132,3,4,134,6,7,8,9,10,11,140,143,14,15,0",1)
 end

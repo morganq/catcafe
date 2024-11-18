@@ -21,20 +21,6 @@ function zspr(n, x, y, fx, fy, dw, dh)
     sspr(m[1], m[2], m[3], m[4], x + m[5], y - m[6], dw or m[3], dh or m[4], fx == true or fx == 1, fy == true or fy == 1)
 end
 
-function draw_paw(x, y, angle, size, color1, color2)
-    for i = -2, 1 do
-        local ta = angle + i * 0.125 + 0.0625
-        local cx, cy = cos(ta) * size + x, sin(ta) * size + y
-        circfill(cx, cy, size * 0.30, color2)
-    end
-    for i = 0, 2 do
-        local ta = angle + 0.33 * i
-        local cx = cos(ta) * size * 0.3 + x + cos(angle) * size * -0.1
-        local cy = sin(ta) * size * 0.3 + y + sin(angle) * size * -0.1
-        circfill(cx, cy, size * 0.40, color2)
-    end
-end
-
 function center_print(s, x, y, color, bgcolor, outlinecolor, rounded)
 	for s in all(split(s,"\n")) do
 		local w = print(s,0,-600) 
