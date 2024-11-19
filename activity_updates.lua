@@ -24,11 +24,13 @@ function activity_updates()
                 del(ents, activity.ent)
                 money += activity.ent.cost
                 activity = play_activity()
+                sfx(2,3)
             else 
                 if activity.drop_valid then
                     activity = play_activity()
                 else
                     -- sfx
+                    sfx(4,3)
                 end
             end
         end            
@@ -71,17 +73,21 @@ function activity_updates()
                 elseif item.type == "adopt_cat" then
                     if has_ent(item.title) then
                         hint("already adopted " .. item.title .. "!")
+                        sfx(4,3)
                     elseif #cats >= get_max_cats()\1 then
                         hint("reached maximum cats")
+                        sfx(4,3)
                     else
                         add(cats, make_cat(item.features.index))
                         activity = play_activity()
+                        sfx(2,3)
                     end
                 elseif item.fn then
                     item.fn()
                 end
             else
                 hint("not enough money")
+                sfx(4,3)
             end                   
         end
         if btnp(B_BACK) then
@@ -101,13 +107,16 @@ function activity_updates()
             add(activity.bills, v)
             activity.change -= v
             bump_change = 4
+            sfx(3,3)
         end
         if activity.change == 0 then
             complete_change()
+            sfx(2,3)
         elseif activity.change < 0 or #activity.bills > 10 then
             activity.change = activity.given - activity.customer.sale
             activity.bills = {}
             hint("wrong change")
+            sfx(4,3)
         end        
         if btnp(B_BACK) then
             activity = play_activity()

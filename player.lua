@@ -76,6 +76,7 @@ function make_player(x, y)
             end
             self.nearest_cat = nc
             if btnp(B_BACK) and nc then
+                sfx(5+rnd(3),3)
                 self.snack_time = 30
                 nc:walk_to(self.x + rnd(12) - 6, self.y + rnd(12) - 6)
             end

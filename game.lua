@@ -11,8 +11,6 @@ Goal: Get to 9x7
 
 ]]
 
-
-
 -- Is it diagonal?
 if abs(dx) != 0 and abs(dy) != 0 then
     -- Get the subpixel position
@@ -233,6 +231,7 @@ acquire_buyable,1,57,6
     particle_stars = {}
     today_stats = string_table("customers=0,stars earned=0,sales=0,tips=0,total=0")
     today_stats_order = split("customers,stars earned,sales,tips,total")
+    music(9)
 end
 
 function acquire_buyable(i, x, y, rotn)
@@ -260,7 +259,7 @@ function acquire_buyable(i, x, y, rotn)
     if e.ind == 15 then
         prices["drip coffee"] = 3 
     end
-
+    sfx(0,3)
     return e
 end
 
@@ -405,6 +404,8 @@ _update = function()
                 door.interact_text = nil
                 door.interact = nil
                 init_customers()
+                sfx(1,3)
+                music(10)
             end
         else
             door.interact_text = "go home"
@@ -416,7 +417,7 @@ _update = function()
 
     
     --if daytime > 10 then
-    --    end_day()
+    --    end_day() 
     --end
     
     if activity.name != "phone" then
@@ -424,6 +425,7 @@ _update = function()
             daytime += 1
             if daytime >= closing_ticks then
                 cafe_open = false
+                music(9)
             end
             update_customers()                    
         end
